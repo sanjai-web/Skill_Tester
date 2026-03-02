@@ -1,0 +1,56 @@
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const helmet = require('helmet');
+
+const app = express();
+const PORT = process.env.PORT || 5000;
+
+// Middleware
+app.use(helmet());
+app.use(cors({
+    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    credentials: true
+}));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Health Check Route
+app.get('/api/health', (req, res) => {
+    res.status(200).json({ status: 'success', message: 'API is running' });
+});
+
+// Import Routes
+app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/interviews', require('./routes/interviewRoutes'));
+app.use('/api/payments', require('./routes/paymentRoutes'));
+app.use('/api/code', require('./routes/codeRoutes'));
+
+// Global Error Handler — always returns JSON, never HTML
+app.use((err, req, res, next) => {
+    // Always log full error on the server for debugging
+    console.error(`[${new Date().toISOString()}] ERROR on ${req.method} ${req.originalUrl}:`, err.message);
+    if (process.env.NODE_ENV === 'development') {
+        console.error(err.stack);
+    }
+    const statusCode = err.status || err.statusCode || 500;
+    res.status(statusCode).json({
+        status: 'error',
+        message: err.message || 'An unexpected error occurred. Please try again.',
+        // Only show stack trace in development mode
+        ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+    });
+});
+
+app.listen(PORT, async () => {
+    console.log(`\n🚀 Server is running on port ${PORT}`);
+
+    // Firebase / Firestore connection check
+    try {
+        const { db } = require('./config/firebase');
+        await db.collection('_healthcheck').limit(1).get();
+        console.log('✅ Firebase Firestore connected successfully!');
+    } catch (err) {
+        console.error('❌ Firebase Firestore connection FAILED:', err.message);
+    }
+});

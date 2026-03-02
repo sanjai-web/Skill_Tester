@@ -1,0 +1,65 @@
+# ==========================================
+#  AI Interview Project — Root .gitignore
+# ==========================================
+
+# ── Secrets & Credentials ─────────────────
+.env
+.env.*
+!.env.example
+*.json.bak
+
+# Firebase service account keys (CRITICAL — never commit these!)
+*firebase-adminsdk*.json
+*service-account*.json
+*serviceAccount*.json
+
+# ── Dependencies ───────────────────────────
+node_modules/
+.pnp
+.pnp.js
+.yarn/install-state.gz
+
+# ── Build Outputs ──────────────────────────
+dist/
+build/
+.output/
+out/
+
+# ── Logs ───────────────────────────────────
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ── Runtime / Cache ────────────────────────
+.cache/
+.parcel-cache/
+.vite/
+*.tsbuildinfo
+
+# ── OS Files ───────────────────────────────
+.DS_Store
+Thumbs.db
+Desktop.ini
+ehthumbs.db
+
+# ── IDE / Editor ───────────────────────────
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.swp
+
+# ── Testing ────────────────────────────────
+coverage/
+.nyc_output/
+
+# ── Misc ───────────────────────────────────
+*.local
+tmp/
+temp/
