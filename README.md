@@ -23,7 +23,7 @@ SkillTester is a comprehensive, AI-powered mock interview application designed t
 ### Backend
 - **Framework:** Node.js, Express.js
 - **AI Integration:** `groq-sdk`
-- **Database / Storage:** PostgreSQL (via `@supabase/supabase-js`)
+- **Database / Storage:** Firebase (Firestore / Storage) via `firebase-admin`
 - **File Parsing:** `multer`, `pdf-parse` (for resume data extraction)
 - **Code Execution:** Wandbox API integration
 - **Payments:** `razorpay`
@@ -37,7 +37,7 @@ Follow these instructions to set up the project locally.
 - API Keys for:
   - Groq
   - Firebase
-  - Supabase
+  - Firebase (Firestore & Admin SDK)
   - Razorpay
 
 ### 1. Clone the Repository
@@ -55,9 +55,11 @@ npm install
 Create a `.env` file in the `Backend` directory (you can use `.env.example` as a reference) and add your respective API keys:
 ```env
 PORT=5000
+FRONTEND_URL=http://localhost:5173
 GROQ_API_KEY=your_groq_api_key
-SUPABASE_URL=your_supabase_url
-SUPABASE_KEY=your_supabase_key
+FIREBASE_PROJECT_ID=your_firebase_project_id
+FIREBASE_CLIENT_EMAIL=your_firebase_client_email
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nyour_key_here\n-----END PRIVATE KEY-----\n"
 # ... add other required keys
 ```
 Start the backend server:
