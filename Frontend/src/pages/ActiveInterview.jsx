@@ -4,7 +4,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Mic, MicOff, Video, VideoOff, Layout, SquareTerminal, X, Send, Loader, Play, ChevronDown } from 'lucide-react';
 import Editor from '@monaco-editor/react';
 import api from '../services/api';
-import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 
 // Language configs — canRun: true means the backend can execute this language
 const LANGUAGES = {
@@ -62,17 +61,74 @@ const ActiveInterview = () => {
     const editorCodeRef = useRef(LANGUAGES.whiteboard.defaultCode);
     const selectedVoiceRef = useRef(null); // female voice chosen once per session
 
-    // react-speech-recognition
-    const { transcript: liveTranscript, listening, resetTranscript, browserSupportsSpeechRecognition } = useSpeechRecognition();
+    const [liveTranscript, setLiveTranscript] = useState('');
 
-    // When mic stops, commit the spoken text to userInput so it stays for editing/submission
+    // Native Web Speech API Setup
     useEffect(() => {
-        if (!listening && liveTranscript) {
-            setUserInput(prev => prev || liveTranscript);
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) return;
+
+        const recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = 'en-US';
+        recognition.maxAlternatives = 1;
+
+        recognition.onresult = (event) => {
+            let currentTranscript = '';
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                currentTranscript += event.results[i][0].transcript;
+            }
+            setLiveTranscript(currentTranscript);
+        };
+
+        recognition.onerror = (event) => {
+            console.error('Speech recognition error:', event.error);
+            setIsListening(false);
+            setIsMicOn(false);
+        };
+
+        recognition.onend = () => {
+            // Auto-restart if we're supposed to be listening
+            if (isListening) {
+                try {
+                    recognition.start();
+                } catch (e) {
+                    console.error('Failed to restart recognition:', e);
+                }
+            } else {
+                // When explicitly stopped, commit the transcript
+                setUserInput(prev => {
+                    const combined = (prev + ' ' + liveTranscript).trim();
+                    return combined;
+                });
+                setLiveTranscript('');
+            }
+        };
+
+        recognitionRef.current = recognition;
+
+        return () => {
+            if (recognitionRef.current) {
+                recognitionRef.current.stop();
+            }
+        };
+    }, []);
+
+    // Sync state when listening toggles
+    useEffect(() => {
+        if (isListening && recognitionRef.current) {
+            try {
+                recognitionRef.current.start();
+            } catch (e) {
+                console.error(e);
+            }
+        } else if (!isListening && recognitionRef.current) {
+            recognitionRef.current.stop();
         }
-        setIsListening(listening);
-        setIsMicOn(listening);
-    }, [listening]);
+        setIsMicOn(isListening);
+    }, [isListening]);
+
 
     // --- Timer ---
     useEffect(() => {
@@ -264,26 +320,26 @@ const ActiveInterview = () => {
 
     // --- Speech-to-Text toggle ---
     const toggleListening = async () => {
-        if (!browserSupportsSpeechRecognition) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
             alert('Speech recognition is not supported in your browser. Try Chrome or Edge.');
             return;
         }
-        if (listening) {
-            SpeechRecognition.stopListening();
+
+        if (isListening) {
+            setIsListening(false);
         } else {
-            // Explicitly request mic permission — triggers the browser popup
+            // Explicitly request mic permission
             try {
                 await navigator.mediaDevices.getUserMedia({ audio: true });
             } catch (err) {
                 alert('Microphone access denied. Please click the 🔒 icon in your browser address bar and allow microphone access, then try again.');
                 return;
             }
-            resetTranscript();
-            setUserInput('');
-            SpeechRecognition.startListening({ continuous: true, language: 'en-US' });
+            setLiveTranscript('');
+            setIsListening(true);
         }
     };
-
 
     // --- Submit Answer to Backend ---
     const submitAnswer = async (directText) => {
@@ -608,12 +664,12 @@ const ActiveInterview = () => {
                                 </div>
                             )}
                             <textarea
-                                value={listening ? liveTranscript : userInput}
-                                onChange={(e) => { if (!listening) setUserInput(e.target.value); }}
-                                onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitAnswer(listening ? liveTranscript : undefined); } }}
+                                value={isListening ? liveTranscript : userInput}
+                                onChange={(e) => { if (!isListening) setUserInput(e.target.value); }}
+                                onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitAnswer(isListening ? liveTranscript : undefined); } }}
                                 placeholder={isListening ? '🎤 Speak now — your words will appear here...' : 'Type your answer or click the mic to speak...'}
                                 rows={3}
-                                readOnly={listening}
+                                readOnly={isListening}
                                 style={{
                                     width: '100%', padding: '0.75rem', borderRadius: '8px', resize: 'none',
                                     fontFamily: 'inherit', fontSize: '0.95rem', lineHeight: 1.6,
@@ -625,7 +681,7 @@ const ActiveInterview = () => {
                                 }}
                             />
                         </div>
-                        <button onClick={() => submitAnswer(listening ? liveTranscript : undefined)} disabled={!(listening ? liveTranscript : userInput).trim() || isLoading}
+                        <button onClick={() => submitAnswer(isListening ? liveTranscript : undefined)} disabled={!(isListening ? liveTranscript : userInput).trim() || isLoading}
                             style={{ padding: '0.75rem', borderRadius: '8px', backgroundColor: 'var(--color-primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: (!userInput.trim() || isLoading) ? 0.5 : 1 }}>
                             {isLoading ? <Loader size={20} style={{ animation: 'spin 1s linear infinite' }} /> : <Send size={20} />}
                         </button>
