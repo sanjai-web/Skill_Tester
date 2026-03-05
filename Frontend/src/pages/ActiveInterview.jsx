@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Mic, MicOff, Video, VideoOff, Layout, SquareTerminal, X, Send, Loader, Play, ChevronDown } from 'lucide-react';
 import Editor from '@monaco-editor/react';
 import api from '../services/api';
+import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 
 // Language configs — canRun: true means the backend can execute this language
 const LANGUAGES = {
@@ -42,7 +43,6 @@ const ActiveInterview = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [isFinishing, setIsFinishing] = useState(false);
     const [userInput, setUserInput] = useState('');
-    const [isListening, setIsListening] = useState(false);
     const [transcript, setTranscript] = useState([]);
     const [currentQuestion, setCurrentQuestion] = useState(firstQuestion || '');
     const [codingProblem, setCodingProblem] = useState(null); // active coding problem text
@@ -61,73 +61,35 @@ const ActiveInterview = () => {
     const editorCodeRef = useRef(LANGUAGES.whiteboard.defaultCode);
     const selectedVoiceRef = useRef(null); // female voice chosen once per session
 
-    const [liveTranscript, setLiveTranscript] = useState('');
+    // react-speech-recognition setup
+    const {
+        transcript: liveTranscript,
+        listening: isListening,
+        resetTranscript,
+        browserSupportsSpeechRecognition,
+        isMicrophoneAvailable
+    } = useSpeechRecognition();
 
-    // Native Web Speech API Setup
+    // Debugging STT status
     useEffect(() => {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!SpeechRecognition) return;
+        console.log('[STT Debug] Browser Supports STT:', browserSupportsSpeechRecognition);
+        console.log('[STT Debug] Microphone Available:', isMicrophoneAvailable);
+        console.log('[STT Debug] Is Listening:', isListening);
+    }, [browserSupportsSpeechRecognition, isMicrophoneAvailable, isListening]);
 
-        const recognition = new SpeechRecognition();
-        recognition.continuous = true;
-        recognition.interimResults = true;
-        recognition.lang = 'en-US';
-        recognition.maxAlternatives = 1;
-
-        recognition.onresult = (event) => {
-            let currentTranscript = '';
-            for (let i = event.resultIndex; i < event.results.length; i++) {
-                currentTranscript += event.results[i][0].transcript;
-            }
-            setLiveTranscript(currentTranscript);
-        };
-
-        recognition.onerror = (event) => {
-            console.error('Speech recognition error:', event.error);
-            setIsListening(false);
-            setIsMicOn(false);
-        };
-
-        recognition.onend = () => {
-            // Auto-restart if we're supposed to be listening
-            if (isListening) {
-                try {
-                    recognition.start();
-                } catch (e) {
-                    console.error('Failed to restart recognition:', e);
-                }
-            } else {
-                // When explicitly stopped, commit the transcript
-                setUserInput(prev => {
-                    const combined = (prev + ' ' + liveTranscript).trim();
-                    return combined;
-                });
-                setLiveTranscript('');
-            }
-        };
-
-        recognitionRef.current = recognition;
-
-        return () => {
-            if (recognitionRef.current) {
-                recognitionRef.current.stop();
-            }
-        };
-    }, []);
-
-    // Sync state when listening toggles
+    // When mic stops, commit the spoken text to userInput so it stays for editing/submission
     useEffect(() => {
-        if (isListening && recognitionRef.current) {
-            try {
-                recognitionRef.current.start();
-            } catch (e) {
-                console.error(e);
-            }
-        } else if (!isListening && recognitionRef.current) {
-            recognitionRef.current.stop();
+        if (!isListening && liveTranscript) {
+            setUserInput(prev => {
+                const prevTrimmed = prev.trim();
+                const newTranscript = liveTranscript.trim();
+                if (!prevTrimmed) return newTranscript;
+                if (!newTranscript) return prevTrimmed;
+                return prevTrimmed + ' ' + newTranscript;
+            });
         }
         setIsMicOn(isListening);
-    }, [isListening]);
+    }, [isListening, liveTranscript]);
 
 
     // --- Timer ---
@@ -320,24 +282,38 @@ const ActiveInterview = () => {
 
     // --- Speech-to-Text toggle ---
     const toggleListening = async () => {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!SpeechRecognition) {
+        console.log('[STT Debug] Toggle Listening Clicked');
+        if (!browserSupportsSpeechRecognition) {
             alert('Speech recognition is not supported in your browser. Try Chrome or Edge.');
             return;
         }
 
         if (isListening) {
-            setIsListening(false);
+            console.log('[STT Debug] Stopping listen...');
+            SpeechRecognition.stopListening();
         } else {
-            // Explicitly request mic permission
+            console.log('[STT Debug] Calling SpeechRecognition.startListening()...');
+
+            // Explicitly request permission to ensure the browser doesn't block it silently
             try {
-                await navigator.mediaDevices.getUserMedia({ audio: true });
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                // We MUST release the track immediately so SpeechRecognition can use the hardware!
+                stream.getTracks().forEach(track => track.stop());
             } catch (err) {
+                console.error('[STT Debug] Mic Access Denied:', err);
                 alert('Microphone access denied. Please click the 🔒 icon in your browser address bar and allow microphone access, then try again.');
                 return;
             }
-            setLiveTranscript('');
-            setIsListening(true);
+
+            // clear out the old transcript from the library so it starts fresh
+            resetTranscript();
+
+            try {
+                // start listening with the library wrapper but without strict en-US so it handles regional accents
+                await SpeechRecognition.startListening({ continuous: true });
+            } catch (err) {
+                console.error('[STT Debug] startListening failed:', err);
+            }
         }
     };
 
