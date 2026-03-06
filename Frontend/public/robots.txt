@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /setup
+Disallow: /interview/
+Disallow: /results/
+
+Sitemap: https://skilltester.app/sitemap.xml
