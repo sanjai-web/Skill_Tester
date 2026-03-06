@@ -10,6 +10,7 @@ import InterviewSetup from './pages/InterviewSetup';
 import ActiveInterview from './pages/ActiveInterview';
 import Results from './pages/Results';
 import TermsOfService from './pages/TermsOfService';
+import SEOTutorial from './pages/SEOTutorial';
 
 const AppLayout = () => {
   const location = useLocation();
@@ -25,6 +26,7 @@ const AppLayout = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/terms" element={<TermsOfService />} />
+          <Route path="/seo-tutorial" element={<SEOTutorial />} />
 
           {/* Protected Routes */}
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />

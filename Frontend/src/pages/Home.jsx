@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Bot, Code, Zap, FileText, CheckCircle } from 'lucide-react';
 
 const PricingCard = ({ title, price, features, recommended = false, buttonText }) => (
@@ -89,8 +90,7 @@ const LandingPage = () => {
                 </p>
 
                 <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-                    <button className="btn-primary" style={{ padding: '1rem 2rem', fontSize: '1.1rem' }}>Get Started for Free</button>
-                    <button className="btn-primary" style={{ padding: '1rem 2rem', fontSize: '1.1rem', backgroundColor: 'transparent', border: '1px solid var(--color-border)', color: 'var(--color-text-main)' }}>View Demo</button>
+                    <Link to="/login" className="btn-primary" style={{ padding: '1rem 2rem', fontSize: '1.1rem', textDecoration: 'none' }}>Get Started for Free</Link>
                 </div>
             </section>
 
@@ -157,6 +157,14 @@ const LandingPage = () => {
                 </div>
             </section>
 
+            {/* Footer with SEO Links */}
+            <footer style={{ borderTop: '1px solid var(--color-border)', paddingTop: '2rem', marginTop: '2rem', textAlign: 'center' }}>
+                <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', display: 'flex', justifyContent: 'center', gap: '1.5rem', alignItems: 'center' }}>
+                    <span>© 2026 SkillTester.app</span>
+                    <a href="/terms" style={{ color: 'var(--color-text-main)', textDecoration: 'none' }}>Terms of Service</a>
+                    <a href="/seo-tutorial" style={{ color: 'var(--color-text-main)', textDecoration: 'none' }}>SEO Tutorial</a>
+                </p>
+            </footer>
         </div>
     );
 };
