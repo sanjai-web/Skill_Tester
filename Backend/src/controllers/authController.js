@@ -42,3 +42,43 @@ exports.getMe = async (req, res) => {
         res.status(500).json({ status: 'error', message: 'Could not fetch user profile.' });
     }
 };
+
+// POST /api/auth/google — checks if Google user exists in Firestore, creates if not
+exports.googleLogin = async (req, res) => {
+    try {
+        const { uid, email, name } = req.body;
+
+        if (!uid || !email || !name) {
+            return res.status(400).json({ status: 'error', message: 'Missing user data from Google Auth' });
+        }
+
+        const userRef = db.collection('users').doc(uid);
+        const doc = await userRef.get();
+
+        if (!doc.exists) {
+            // First time logging in with Google: Create Firestore Profile
+            await userRef.set({
+                id: uid,
+                email,
+                name,
+                plan_id: 'free',
+                interviews_remaining: 1,
+                subscription_status: 'active',
+                created_at: new Date().toISOString(),
+                auth_provider: 'google'
+            });
+            console.log(`[Google Auth] Created new Firestore profile for: ${email}`);
+        } else {
+            console.log(`[Google Auth] User already exists: ${email}`);
+        }
+
+        res.status(200).json({
+            status: 'success',
+            message: 'Google Login successful',
+            data: { uid, email, name }
+        });
+    } catch (error) {
+        console.error('Google Login Error:', error.message);
+        res.status(500).json({ status: 'error', message: 'Google authentication failed on server.' });
+    }
+};

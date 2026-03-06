@@ -4,6 +4,8 @@ import {
     createUserWithEmailAndPassword,
     signOut,
     onAuthStateChanged,
+    signInWithPopup,
+    GoogleAuthProvider
 } from 'firebase/auth';
 import { auth } from '../services/firebase';
 import api from "../services/api";
@@ -74,6 +76,35 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    const loginWithGoogle = async () => {
+        try {
+            const provider = new GoogleAuthProvider();
+            const result = await signInWithPopup(auth, provider);
+            const firebaseUser = result.user;
+            const idToken = await firebaseUser.getIdToken();
+            setToken(idToken);
+
+            // Sync with backend (creates Firestore doc if missing)
+            await api.post('/auth/google', {
+                uid: firebaseUser.uid,
+                email: firebaseUser.email,
+                name: firebaseUser.displayName || 'Google User'
+            });
+
+            // Fetch final Firestore profile
+            const res = await api.get('/auth/me', {
+                headers: { Authorization: `Bearer ${idToken}` }
+            });
+            setUser(res.data.data);
+
+            return { success: true };
+        } catch (error) {
+            console.error('Google Login Error:', error);
+            const msg = getFirebaseErrorMessage(error.code);
+            return { success: false, message: msg };
+        }
+    };
+
     const logout = async () => {
         await signOut(auth);
         setUser(null);
@@ -81,7 +112,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, token, loading, login, register, logout }}>
+        <AuthContext.Provider value={{ user, token, loading, login, register, loginWithGoogle, logout }}>
             {children}
         </AuthContext.Provider>
     );

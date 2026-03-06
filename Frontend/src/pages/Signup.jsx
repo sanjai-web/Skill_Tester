@@ -12,8 +12,20 @@ const Signup = () => {
     const [isSuccess, setIsSuccess] = useState(false);
     const [needsEmailConfirmation, setNeedsEmailConfirmation] = useState(false);
 
-    const { register } = useContext(AuthContext);
+    const { register, loginWithGoogle } = useContext(AuthContext);
     const navigate = useNavigate();
+
+    const handleGoogleLogin = async () => {
+        setError(null);
+        setIsLoading(true);
+        const result = await loginWithGoogle();
+        setIsLoading(false);
+        if (result.success) {
+            navigate('/dashboard'); // Go directly to dashboard as Google implies email verified
+        } else {
+            setError(result.message);
+        }
+    };
 
     const handleSignup = async (e) => {
         e.preventDefault();
@@ -142,11 +154,16 @@ const Signup = () => {
                     <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--color-border)' }}></div>
                 </div>
 
-                <button style={{
-                    width: '100%', padding: '0.75rem', borderRadius: '8px',
-                    border: '1px solid var(--color-border)', backgroundColor: 'rgba(255,255,255,0.05)',
-                    color: 'white', fontWeight: 500, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.75rem'
-                }}>
+                <button
+                    onClick={handleGoogleLogin}
+                    disabled={isLoading}
+                    style={{
+                        width: '100%', padding: '0.75rem', borderRadius: '8px',
+                        border: '1px solid var(--color-border)', backgroundColor: 'rgba(255,255,255,0.05)',
+                        color: 'white', fontWeight: 500, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.75rem',
+                        opacity: isLoading ? 0.7 : 1, cursor: isLoading ? 'not-allowed' : 'pointer'
+                    }}
+                >
                     <img src="https://www.google.com/favicon.ico" alt="Google" style={{ width: '16px', height: '16px' }} />
                     Continue with Google
                 </button>
