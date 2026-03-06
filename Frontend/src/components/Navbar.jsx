@@ -66,8 +66,8 @@ const Navbar = () => {
                     // Guest navigation
                     <>
                         <Link to="/" style={{ color: 'var(--color-text-main)', textDecoration: 'none', fontWeight: 500 }}>Home</Link>
-                        <Link to="/#features" style={{ color: 'var(--color-text-main)', textDecoration: 'none', fontWeight: 500 }}>Features</Link>
-                        <Link to="/#pricing" style={{ color: 'var(--color-text-main)', textDecoration: 'none', fontWeight: 500 }}>Pricing</Link>
+                        <a href="/#features" style={{ color: 'var(--color-text-main)', textDecoration: 'none', fontWeight: 500 }}>Features</a>
+                        <a href="/#pricing" style={{ color: 'var(--color-text-main)', textDecoration: 'none', fontWeight: 500 }}>Pricing</a>
                         <div style={{ width: '1px', height: '24px', backgroundColor: 'var(--color-border)', margin: '0 0.5rem' }}></div>
                         <Link to="/login" style={{ color: 'var(--color-text-main)', textDecoration: 'none', fontWeight: 500 }}>Log in</Link>
                         <Link to="/signup" className="btn-primary" style={{ textDecoration: 'none' }}>Sign up</Link>

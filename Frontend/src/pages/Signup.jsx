@@ -11,6 +11,7 @@ const Signup = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
     const [needsEmailConfirmation, setNeedsEmailConfirmation] = useState(false);
+    const [agreedToTerms, setAgreedToTerms] = useState(false);
 
     const { register, loginWithGoogle } = useContext(AuthContext);
     const navigate = useNavigate();
@@ -143,7 +144,33 @@ const Signup = () => {
                         </div>
                     </div>
 
-                    <button type="submit" className="btn-primary" style={{ marginTop: '1rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.6rem', marginTop: '0.25rem' }}>
+                        <input
+                            type="checkbox"
+                            id="terms-checkbox"
+                            checked={agreedToTerms}
+                            onChange={(e) => setAgreedToTerms(e.target.checked)}
+                            style={{ marginTop: '3px', accentColor: 'var(--color-primary)', width: '16px', height: '16px', flexShrink: 0, cursor: 'pointer' }}
+                        />
+                        <label htmlFor="terms-checkbox" style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', lineHeight: 1.5, cursor: 'pointer' }}>
+                            I have read and agree to the{' '}
+                            <a
+                                href="/terms"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{ color: 'var(--color-primary)', textDecoration: 'underline', fontWeight: 600 }}
+                            >
+                                Terms of Service
+                            </a>
+                        </label>
+                    </div>
+
+                    <button
+                        type="submit"
+                        className="btn-primary"
+                        disabled={!agreedToTerms || isLoading}
+                        style={{ marginTop: '1rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', opacity: (!agreedToTerms || isLoading) ? 0.5 : 1, cursor: (!agreedToTerms || isLoading) ? 'not-allowed' : 'pointer' }}
+                    >
                         <UserPlus size={18} /> Sign Up
                     </button>
                 </form>
