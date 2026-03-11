@@ -177,9 +177,21 @@ const Signup = () => {
                             type="submit"
                             className="btn-primary"
                             disabled={!agreedToTerms || isLoading}
-                            style={{ marginTop: '1rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', opacity: (!agreedToTerms || isLoading) ? 0.5 : 1, cursor: (!agreedToTerms || isLoading) ? 'not-allowed' : 'pointer' }}
+                            style={{ 
+                                marginTop: '1rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', 
+                                opacity: (!agreedToTerms || isLoading) ? 0.7 : 1, cursor: (!agreedToTerms || isLoading) ? 'not-allowed' : 'pointer' 
+                            }}
                         >
-                            <UserPlus size={18} /> Sign Up
+                            {isLoading ? (
+                                <>
+                                    <div className="spinner" style={{ width: '18px', height: '18px', border: '2px solid rgba(255,255,255,0.3)', borderTop: '2px solid white', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                                    Creating Account...
+                                </>
+                            ) : (
+                                <>
+                                    <UserPlus size={18} /> Sign Up
+                                </>
+                            )}
                         </button>
                     </form>
 
@@ -199,13 +211,30 @@ const Signup = () => {
                             opacity: isLoading ? 0.7 : 1, cursor: isLoading ? 'not-allowed' : 'pointer'
                         }}
                     >
-                        <img src="https://www.google.com/favicon.ico" alt="Google" style={{ width: '16px', height: '16px' }} />
-                        Continue with Google
+                        {isLoading ? (
+                            <>
+                                <div className="spinner" style={{ width: '16px', height: '16px', border: '2px solid rgba(255,255,255,0.3)', borderTop: '2px solid white', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                                Connecting...
+                            </>
+                        ) : (
+                            <>
+                                <img src="https://www.google.com/favicon.ico" alt="Google" style={{ width: '16px', height: '16px' }} />
+                                Continue with Google
+                            </>
+                        )}
                     </button>
 
                     <p style={{ textAlign: 'center', fontSize: '0.9rem', marginTop: '1rem' }}>
                         Already have an account? <Link to="/login" style={{ color: 'var(--color-primary)', textDecoration: 'none', fontWeight: 600 }}>Sign in</Link>
                     </p>
+                    <style>
+                        {`
+                        @keyframes spin {
+                            0% { transform: rotate(0deg); }
+                            100% { transform: rotate(360deg); }
+                        }
+                        `}
+                    </style>
                 </div>
             </div>
         </>

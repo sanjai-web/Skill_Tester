@@ -7,7 +7,9 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(helmet());
+app.use(helmet({
+    crossOriginOpenerPolicy: false // Required for Google Login popup to work
+}));
 app.use(cors({
     origin: [
         'http://localhost:5173',
