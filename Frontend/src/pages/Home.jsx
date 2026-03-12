@@ -269,13 +269,18 @@ const LandingPage = () => {
 
                 {/* Footer with SEO Links */}
                 <footer style={{ borderTop: '1px solid var(--color-border)', paddingTop: '2rem', marginTop: '2rem', textAlign: 'center' }}>
-                    <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', display: 'flex', justifyContent: 'center', gap: '1.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                        <span>© 2026 SkillTester.app</span>
-                        <Link to="/terms" style={{ color: 'var(--color-text-main)', textDecoration: 'none' }}>Terms of Service</Link>
-                        <Link to="/privacy" style={{ color: 'var(--color-text-main)', textDecoration: 'none' }}>Privacy Policy</Link>
-                        <Link to="/seo-tutorial" style={{ color: 'var(--color-text-main)', textDecoration: 'none' }}>SEO Tutorial</Link>
-                        <a href="#features" style={{ color: 'var(--color-text-main)', textDecoration: 'none' }}>Features</a>
-                        <a href="#how-it-works" style={{ color: 'var(--color-text-main)', textDecoration: 'none' }}>How it Works</a>
+                    <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', justifyContent: 'center', gap: '1.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                            <span>© 2026 SkillTester.app</span>
+                            <Link to="/terms" style={{ color: 'var(--color-text-main)', textDecoration: 'none' }}>Terms of Service</Link>
+                            <Link to="/privacy" style={{ color: 'var(--color-text-main)', textDecoration: 'none' }}>Privacy Policy</Link>
+                            <Link to="/seo-tutorial" style={{ color: 'var(--color-text-main)', textDecoration: 'none' }}>SEO Tutorial</Link>
+                            <a href="#features" style={{ color: 'var(--color-text-main)', textDecoration: 'none' }}>Features</a>
+                            <a href="#how-it-works" style={{ color: 'var(--color-text-main)', textDecoration: 'none' }}>How it Works</a>
+                        </div>
+                        <div style={{ fontSize: '0.8rem', opacity: 0.8 }}>
+                            Billing Label: <strong>TN SOFTWARE SYSTEMS</strong>
+                        </div>
                     </p>
                 </footer>
             </div>

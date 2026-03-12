@@ -14,7 +14,7 @@ const TermsOfService = () => {
                 <h1 style={{ fontSize: '2.2rem', marginBottom: '0.5rem' }}>Terms of Service</h1>
                 <p style={{ color: 'var(--color-text-muted)', marginBottom: '2rem', fontSize: '0.9rem' }}>Last updated: March 06, 2026</p>
 
-                <p>These Terms of Service ("Terms") govern your use of our website located at <strong>https://www.skilltester.app</strong> (the "Service") operated by SkillTester ("we", "us", "our", "Company").</p>
+                <p>These Terms of Service ("Terms") govern your use of our website located at <strong>https://www.skilltester.app</strong> (the "Service") operated by <strong>TN SOFTWARE SYSTEMS</strong> ("we", "us", "our", "Company").</p>
                 <p>By accessing or using the Service you agree to be bound by these Terms. If you disagree with any part of the terms then you may not access the Service.</p>
 
                 <Section title="1. Accounts">
@@ -224,8 +224,9 @@ const TermsOfService = () => {
                     </p>
                 </Section>
 
-                <p style={{ marginTop: '3rem', fontSize: '0.85rem', color: 'var(--color-text-muted)', textAlign: 'center', borderTop: '1px solid var(--color-border)', paddingTop: '1.5rem' }}>
-                    © 2026 SkillTester.app – All Rights Reserved. These terms are subject to change without further notice.
+                <p style={{ marginTop: '3rem', fontSize: '0.85rem', color: 'var(--color-text-muted)', textAlign: 'center', borderTop: '1px solid var(--color-border)', paddingTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    <span>© 2026 SkillTester.app – All Rights Reserved. These terms are subject to change without further notice.</span>
+                    <span style={{ opacity: 0.8 }}>Billing Label: <strong>TN SOFTWARE SYSTEMS</strong></span>
                 </p>
             </div>
         </>

@@ -122,9 +122,14 @@ const PrivacyPolicy = () => {
                     </p>
                 </section>
 
-                <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: '1.5rem', display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
-                    <Link to="/" style={{ color: 'var(--color-primary)', textDecoration: 'none', fontWeight: 500 }}>← Back to Home</Link>
-                    <Link to="/terms" style={{ color: 'var(--color-text-muted)', textDecoration: 'none' }}>Terms of Service</Link>
+                <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
+                        <Link to="/" style={{ color: 'var(--color-primary)', textDecoration: 'none', fontWeight: 500 }}>← Back to Home</Link>
+                        <Link to="/terms" style={{ color: 'var(--color-text-muted)', textDecoration: 'none' }}>Terms of Service</Link>
+                    </div>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', textAlign: 'center', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                        © 2026 SkillTester.app | Billing Label: <strong>TN SOFTWARE SYSTEMS</strong>
+                    </div>
                 </div>
             </div>
         </>
