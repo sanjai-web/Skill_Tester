@@ -72,15 +72,21 @@ exports.verifyPayment = async (req, res, next) => {
         }
 
         const planLimits = { basic: 3, intermediate: 10, pro: 23 };
-        const newInterviewsCount = planLimits[trustedPlanId] || 0;
+        const creditsToAdd = planLimits[trustedPlanId] || 0;
 
-        // Update subscription info in the user's Firestore document
-        await db.collection('users').doc(userId).update({
+        // 4. Update user subscription (Additive Logic)
+        const userRef = db.collection('users').doc(userId);
+        const userDoc = await userRef.get();
+        const currentInterviews = userDoc.exists ? (userDoc.data().interviews_remaining || 0) : 0;
+        const newTotalInterviews = currentInterviews + creditsToAdd;
+
+        await userRef.update({
             plan_id: trustedPlanId,
-            interviews_remaining: newInterviewsCount,
+            interviews_remaining: newTotalInterviews,
             subscription_status: 'active',
             updated_at: new Date().toISOString(),
         });
+
 
         // Mark order as paid
         await db.collection('orders').doc(razorpay_order_id).update({
