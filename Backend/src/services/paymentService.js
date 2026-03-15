@@ -18,7 +18,8 @@ const paymentService = {
             const order = await razorpayInstance.orders.create(options);
             return order;
         } catch (error) {
-            throw new Error('Failed to create Razorpay order: ' + error.message);
+            console.error('Full Razorpay Error:', error);
+            throw new Error(error.message || 'Unknown Razorpay error occurred');
         }
     },
 

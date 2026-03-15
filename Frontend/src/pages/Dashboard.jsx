@@ -189,9 +189,9 @@ const Dashboard = () => {
                             {(() => {
                                 const plans = [
                                     { id: 'free', label: 'Free', price: 0, interviews: 1, features: ['1 AI mock interview', 'Basic text feedback', 'Adaptive questions'] },
-                                    { id: 'basic', label: 'Basic', price: 1, interviews: 3, features: ['3 AI mock interviews', 'Detailed performance report', 'Voice mode'] },
-                                    { id: 'intermediate', label: 'Intermediate', price: 3, interviews: 10, features: ['10 AI mock interviews', 'Advanced technical questions', 'Code editor', 'Analytics'], recommended: true },
-                                    { id: 'pro', label: 'Pro', price: 5, interviews: 23, features: ['23 AI mock interviews', 'Priority AI generation', 'Unlimited resume uploads', 'Priority email support'] },
+                                    { id: 'basic', label: 'Basic', price: 89, interviews: 3, features: ['3 AI mock interviews', 'Detailed performance report', 'Voice mode'] },
+                                    { id: 'intermediate', label: 'Intermediate', price: 250, interviews: 10, features: ['10 AI mock interviews', 'Advanced technical questions', 'Code editor', 'Analytics'], recommended: true },
+                                    { id: 'pro', label: 'Pro', price: 479, interviews: 23, features: ['23 AI mock interviews', 'Priority AI generation', 'Unlimited resume uploads', 'Priority email support'] },
                                 ];
                                 const currentPlanId = subscription?.plan_id || 'free';
 

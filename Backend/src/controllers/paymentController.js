@@ -8,7 +8,7 @@ exports.createOrder = async (req, res, next) => {
             return res.status(400).json({ status: 'error', message: 'Please provide a planId.' });
         }
 
-        const planPrices = { basic: 1, intermediate: 3, pro: 5 };
+        const planPrices = { basic: 89, intermediate: 250, pro: 479 };
         const amount = planPrices[planId];
         if (!amount) {
             return res.status(400).json({ status: 'error', message: `Invalid plan: "${planId}". Valid options are: basic, intermediate, pro.` });
