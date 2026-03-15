@@ -21,6 +21,69 @@ const Dashboard = () => {
         }
     };
 
+    const handleUpgrade = async (planId) => {
+        try {
+            // 1. Create Order
+            const { data: orderRes } = await api.post('/payments/create-order', { planId });
+            
+            if (orderRes.status !== 'success') {
+                throw new Error(orderRes.message || 'Failed to create payment order.');
+            }
+
+            const { orderId, amount, currency } = orderRes.data;
+
+            // 2. Open Razorpay Checkout
+            const options = {
+                key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+                amount: amount,
+                currency: currency,
+                name: 'Skill Tester',
+                description: `Upgrade to ${planId} plan`,
+                order_id: orderId,
+                handler: async (response) => {
+                    try {
+                        // 3. Verify Payment
+                        const { data: verifyRes } = await api.post('/payments/verify', {
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_signature: response.razorpay_signature,
+                            planId: planId
+                        });
+
+                        if (verifyRes.status === 'success') {
+                            alert(`Success! Your account has been upgraded to ${planId}.`);
+                            // Refresh data
+                            window.location.reload();
+                        } else {
+                            alert('Payment verification failed.');
+                        }
+                    } catch (err) {
+                        console.error('Verification Error:', err);
+                        alert('Error verifying payment: ' + (err.response?.data?.message || err.message));
+                    }
+                },
+                prefill: {
+                    name: user?.name || '',
+                    email: user?.email || '',
+                },
+                theme: {
+                    color: '#3b82f6',
+                },
+            };
+
+            const rzp = new window.Razorpay(options);
+            rzp.on('payment.failed', function (response) {
+                alert('Payment failed: ' + response.error.description);
+            });
+            rzp.open();
+
+        } catch (err) {
+            console.error('Upgrade Error:', err);
+            alert('Could not initiate upgrade: ' + (err.response?.data?.message || err.message));
+        }
+    };
+
+
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -177,19 +240,21 @@ const Dashboard = () => {
                                                         ))}
                                                     </ul>
                                                     <button
-                                                        disabled={isCurrent}
+                                                        onClick={() => handleUpgrade(plan.id)}
+                                                        disabled={isCurrent || plan.id === 'free'}
                                                         style={{
                                                             padding: '0.6rem 1rem', borderRadius: '8px', fontWeight: 600, fontSize: '0.85rem',
                                                             backgroundColor: isCurrent ? 'rgba(59,130,246,0.15)' : plan.recommended ? 'var(--color-primary)' : 'transparent',
                                                             border: isCurrent ? '1px solid var(--color-primary)' : plan.recommended ? 'none' : '1px solid var(--color-border)',
                                                             color: isCurrent ? 'var(--color-primary)' : 'white',
-                                                            cursor: isCurrent ? 'default' : 'pointer',
+                                                            cursor: isCurrent || plan.id === 'free' ? 'default' : 'pointer',
                                                             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem'
                                                         }}>
-                                                        {isCurrent ? 'Current Plan' : (
+                                                        {isCurrent ? 'Current Plan' : plan.id === 'free' ? 'Default' : (
                                                             <><Zap size={14} /> Upgrade</>
                                                         )}
                                                     </button>
+
                                                 </div>
                                             );
                                         })}
