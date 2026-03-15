@@ -52,7 +52,8 @@ const Dashboard = () => {
 
                         if (verifyRes.status === 'success') {
                             alert(`Success! Your account has been upgraded to ${planId}.`);
-                            // Refresh data
+                            // Move to dashboard and refresh
+                            navigate('/dashboard');
                             window.location.reload();
                         } else {
                             alert('Payment verification failed.');

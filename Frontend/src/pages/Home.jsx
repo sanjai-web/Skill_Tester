@@ -1,55 +1,68 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
 import { Bot, Code, Zap, FileText, CheckCircle, ChevronDown, Play, MessageSquare, Target, Menu, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import api from '../services/api';
+import { auth } from '../services/firebase';
 
-const PricingCard = ({ title, price, features, recommended = false, buttonText }) => (
-    <div className={`glass-card ${recommended ? 'recommended-tier' : ''}`} style={{
-        padding: '2rem',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '1.5rem',
-        position: 'relative',
-        border: recommended ? '2px solid var(--color-primary)' : 'var(--glass-border)',
-        transform: recommended ? 'scale(1.05)' : 'none',
-        zIndex: recommended ? 10 : 1
-    }}>
-        {recommended && (
-            <div style={{
-                position: 'absolute',
-                top: '-12px',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                backgroundColor: 'var(--color-primary)',
-                color: 'white',
-                padding: '4px 12px',
-                borderRadius: '20px',
-                fontSize: '0.8rem',
-                fontWeight: 'bold'
-            }}>RECOMMENDED</div>
-        )}
-        <div>
-            <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>{title}</h3>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
-                <span style={{ fontSize: '3rem', fontWeight: 800 }}>${price}</span>
-                {price !== '0' && <span style={{ color: 'var(--color-text-muted)' }}>/ one-time</span>}
+const PricingCard = ({ title, price, features, recommended = false, buttonText, onUpgrade }) => {
+    const isFree = price === "0" || price === 0;
+    return (
+        <div className={`glass-card ${recommended ? 'recommended-tier' : ''}`} style={{
+            padding: '2rem',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '1.5rem',
+            position: 'relative',
+            border: recommended ? '2px solid var(--color-primary)' : 'var(--glass-border)',
+            transform: recommended ? 'scale(1.05)' : 'none',
+            zIndex: recommended ? 10 : 1
+        }}>
+            {recommended && (
+                <div style={{
+                    position: 'absolute',
+                    top: '-12px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    backgroundColor: 'var(--color-primary)',
+                    color: 'white',
+                    padding: '4px 12px',
+                    borderRadius: '20px',
+                    fontSize: '0.8rem',
+                    fontWeight: 'bold'
+                }}>RECOMMENDED</div>
+            )}
+            <div>
+                <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>{title}</h3>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+                    <span style={{ fontSize: '3rem', fontWeight: 800 }}>{isFree ? '₹0' : `₹${price}`}</span>
+                    {!isFree && <span style={{ color: 'var(--color-text-muted)' }}>/ one-time</span>}
+                </div>
             </div>
+
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1 }}>
+                {features.map((feature, idx) => (
+                    <li key={idx} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <CheckCircle size={18} color="var(--color-success)" />
+                        <span style={{ color: 'var(--color-text-muted)' }}>{feature}</span>
+                    </li>
+                ))}
+            </ul>
+
+            <button
+                className="btn-primary"
+                onClick={onUpgrade}
+                style={{
+                    width: '100%',
+                    marginTop: 'auto',
+                    backgroundColor: recommended ? 'var(--color-primary)' : 'transparent',
+                    border: '1px solid var(--color-primary)',
+                    color: recommended ? 'white' : 'var(--color-primary)',
+                    cursor: 'pointer'
+                }}>
+                {buttonText}
+            </button>
         </div>
-
-        <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1 }}>
-            {features.map((feature, idx) => (
-                <li key={idx} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <CheckCircle size={18} color="var(--color-success)" />
-                    <span style={{ color: 'var(--color-text-muted)' }}>{feature}</span>
-                </li>
-            ))}
-        </ul>
-
-        <button className="btn-primary" style={{ width: '100%', marginTop: 'auto', backgroundColor: recommended ? 'var(--color-primary)' : 'transparent', border: '1px solid var(--color-primary)', color: recommended ? 'white' : 'var(--color-primary)' }}>
-            {buttonText}
-        </button>
-    </div>
-);
+    );
+};
 
 const FAQItem = ({ question, answer }) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -87,6 +100,77 @@ const Navbar = () => {
 };
 
 const LandingPage = () => {
+    const navigate = useNavigate();
+
+    const handleUpgrade = async (planId) => {
+        const user = auth.currentUser;
+        if (!user) {
+            navigate('/login');
+            return;
+        }
+
+        try {
+            // 1. Create Order
+            const { data: orderRes } = await api.post('/payments/create-order', { planId });
+
+            if (orderRes.status !== 'success') {
+                throw new Error(orderRes.message || 'Failed to create payment order.');
+            }
+
+            const { orderId, amount, currency } = orderRes.data;
+
+            // 2. Open Razorpay Checkout
+            const options = {
+                key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+                amount: amount,
+                currency: currency,
+                name: 'Skill Tester',
+                description: `Upgrade to ${planId} plan`,
+                order_id: orderId,
+                handler: async (response) => {
+                    try {
+                        // 3. Verify Payment
+                        const { data: verifyRes } = await api.post('/payments/verify', {
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_signature: response.razorpay_signature,
+                            planId: planId
+                        });
+
+                        if (verifyRes.status === 'success') {
+                            alert(`Success! Your account has been upgraded to ${planId}.`);
+                            // Move to dashboard and refresh
+                            navigate('/dashboard');
+                            window.location.reload();
+                        } else {
+                            alert('Payment verification failed.');
+                        }
+                    } catch (err) {
+                        console.error('Verification Error:', err);
+                        alert('Error verifying payment: ' + (err.response?.data?.message || err.message));
+                    }
+                },
+                prefill: {
+                    name: user.displayName || '',
+                    email: user.email || '',
+                },
+                theme: {
+                    color: '#3b82f6',
+                },
+            };
+
+            const rzp = new window.Razorpay(options);
+            rzp.on('payment.failed', function (response) {
+                alert('Payment failed: ' + response.error.description);
+            });
+            rzp.open();
+
+        } catch (err) {
+            console.error('Upgrade Error:', err);
+            alert('Could not initiate upgrade: ' + (err.response?.data?.message || err.message));
+        }
+    };
+
     return (
         <>
             <Helmet>
@@ -230,25 +314,29 @@ const LandingPage = () => {
                             price="0"
                             features={["1 AI mock interview", "Basic text feedback", "Adaptive questions"]}
                             buttonText="Start Free"
+                            onUpgrade={() => navigate('/login')}
                         />
                         <PricingCard
                             title="Basic"
-                            price="1"
+                            price="89"
                             features={["3 AI mock interviews", "Detailed performance report", "Timer & voice mode enabled"]}
                             buttonText="Buy Basic"
+                            onUpgrade={() => handleUpgrade('basic')}
                         />
                         <PricingCard
                             title="Intermediate"
-                            price="3"
+                            price="250"
                             features={["10 AI mock interviews", "Advanced technical questions", "Code editor integration", "Analytics dashboard"]}
                             recommended={true}
                             buttonText="Get Recommended"
+                            onUpgrade={() => handleUpgrade('intermediate')}
                         />
                         <PricingCard
                             title="Pro"
-                            price="5"
+                            price="479"
                             features={["23 AI mock interviews", "Priority AI generation", "Unlimited resume updates", "Priority email support"]}
                             buttonText="Get Pro"
+                            onUpgrade={() => handleUpgrade('pro')}
                         />
                     </div>
                 </section>
