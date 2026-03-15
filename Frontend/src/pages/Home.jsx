@@ -1,5 +1,7 @@
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { Bot, Code, Zap, FileText, CheckCircle, ChevronDown, Play, MessageSquare, Target, Menu, X } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { auth } from '../services/firebase';
 
@@ -357,7 +359,7 @@ const LandingPage = () => {
 
                 {/* Footer with SEO Links */}
                 <footer style={{ borderTop: '1px solid var(--color-border)', paddingTop: '2rem', marginTop: '2rem', textAlign: 'center' }}>
-                    <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }}>
+                    <div style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }}>
                         <div style={{ display: 'flex', justifyContent: 'center', gap: '1.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
                             <span>© 2026 SkillTester.app</span>
                             <Link to="/terms" style={{ color: 'var(--color-text-main)', textDecoration: 'none' }}>Terms of Service</Link>
@@ -369,8 +371,9 @@ const LandingPage = () => {
                         <div style={{ fontSize: '0.8rem', opacity: 0.8 }}>
                             Billing Label: <strong>TN SOFTWARE SYSTEMS</strong>
                         </div>
-                    </p>
+                    </div>
                 </footer>
+
             </div>
         </>
     );
