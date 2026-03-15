@@ -242,19 +242,20 @@ const Dashboard = () => {
                                                     </ul>
                                                     <button
                                                         onClick={() => handleUpgrade(plan.id)}
-                                                        disabled={isCurrent || plan.id === 'free'}
+                                                        disabled={plan.id === 'free'}
                                                         style={{
                                                             padding: '0.6rem 1rem', borderRadius: '8px', fontWeight: 600, fontSize: '0.85rem',
-                                                            backgroundColor: isCurrent ? 'rgba(59,130,246,0.15)' : plan.recommended ? 'var(--color-primary)' : 'transparent',
-                                                            border: isCurrent ? '1px solid var(--color-primary)' : plan.recommended ? 'none' : '1px solid var(--color-border)',
-                                                            color: isCurrent ? 'var(--color-primary)' : 'white',
-                                                            cursor: isCurrent || plan.id === 'free' ? 'default' : 'pointer',
+                                                            backgroundColor: plan.id === 'free' ? 'rgba(59,130,246,0.15)' : plan.recommended ? 'var(--color-primary)' : 'transparent',
+                                                            border: plan.id === 'free' ? '1px solid var(--color-border)' : plan.recommended ? 'none' : '1px solid var(--color-border)',
+                                                            color: 'white',
+                                                            cursor: plan.id === 'free' ? 'default' : 'pointer',
                                                             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem'
                                                         }}>
-                                                        {isCurrent ? 'Current Plan' : plan.id === 'free' ? 'Default' : (
-                                                            <><Zap size={14} /> Upgrade</>
+                                                        {plan.id === 'free' ? 'Current Plan' : (
+                                                            <><Zap size={14} /> {isCurrent ? 'Buy Again' : 'Upgrade'}</>
                                                         )}
                                                     </button>
+
 
                                                 </div>
                                             );

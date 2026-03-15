@@ -330,16 +330,17 @@ const LandingPage = () => {
                             price="250"
                             features={["10 AI mock interviews", "Advanced technical questions", "Code editor integration", "Analytics dashboard"]}
                             recommended={true}
-                            buttonText="Get Recommended"
+                            buttonText="Buy Intermediate"
                             onUpgrade={() => handleUpgrade('intermediate')}
                         />
                         <PricingCard
                             title="Pro"
                             price="479"
                             features={["23 AI mock interviews", "Priority AI generation", "Unlimited resume updates", "Priority email support"]}
-                            buttonText="Get Pro"
+                            buttonText="Buy Pro"
                             onUpgrade={() => handleUpgrade('pro')}
                         />
+
                     </div>
                 </section>
 
