@@ -7,7 +7,7 @@ const razorpayInstance = new Razorpay({
 });
 
 const paymentService = {
-    async createOrder(amount, currency = 'USD') {
+    async createOrder(amount, currency = 'INR') {
         const options = {
             amount: amount * 100, // amount in the smallest currency unit (e.g., cents/paise)
             currency,

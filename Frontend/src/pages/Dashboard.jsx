@@ -224,7 +224,7 @@ const Dashboard = () => {
                                                     <div>
                                                         <h3 style={{ margin: '0 0 0.25rem 0', fontSize: '1.1rem' }}>{plan.label}</h3>
                                                         <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
-                                                            <span style={{ fontSize: '2rem', fontWeight: 800 }}>${plan.price}</span>
+                                                            <span style={{ fontSize: '2rem', fontWeight: 800 }}>₹{plan.price}</span>
                                                             {plan.price > 0 && <span style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>one-time</span>}
                                                         </div>
                                                         <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.8rem', color: 'var(--color-primary)' }}>

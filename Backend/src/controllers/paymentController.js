@@ -15,7 +15,8 @@ exports.createOrder = async (req, res, next) => {
         }
 
         try {
-            const order = await paymentService.createOrder(amount, 'USD');
+            // Change currency to INR as it's standard for Razorpay India accounts
+            const order = await paymentService.createOrder(amount, 'INR');
             
             // Store the order details in Firestore to prevent planId tampering during verification
             await db.collection('orders').doc(order.id).set({
@@ -31,9 +32,14 @@ exports.createOrder = async (req, res, next) => {
                 data: { orderId: order.id, amount: order.amount, currency: order.currency }
             });
         } catch (razorpayError) {
-            console.error('Razorpay Order Error:', razorpayError.message);
-            res.status(502).json({ status: 'error', message: `Payment gateway error: ${razorpayError.message}` });
+            console.error('Razorpay Order Error Details:', razorpayError);
+            res.status(502).json({ 
+                status: 'error', 
+                message: `Payment gateway error: ${razorpayError.message}`,
+                details: razorpayError.description || null 
+            });
         }
+
     } catch (error) {
         console.error('createOrder Error:', error.message);
         next(error);
