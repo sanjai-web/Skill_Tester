@@ -1,65 +1,63 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { Bot, Code, Zap, FileText, CheckCircle, ChevronDown, Play, MessageSquare, Target, Menu, X } from 'lucide-react';
+import { MonitorPlay, Users, Headphones, CheckCircle, ChevronDown, PlayCircle, Star, Briefcase } from 'lucide-react';
 import api from '../services/api';
 import { auth } from '../services/firebase';
+import Navbar from '../components/Navbar';
 
+// Reuse pricing card, customized for TechVedhu look
 const PricingCard = ({ title, price, features, recommended = false, buttonText, onUpgrade }) => {
     const isFree = price === "0" || price === 0;
     return (
-        <div className={`glass-card ${recommended ? 'recommended-tier' : ''}`} style={{
-            padding: '2rem',
+        <div className="tv-card" style={{
+            padding: '2.5rem 2rem',
             display: 'flex',
             flexDirection: 'column',
             gap: '1.5rem',
             position: 'relative',
-            border: recommended ? '2px solid var(--color-primary)' : 'var(--glass-border)',
-            transform: recommended ? 'scale(1.05)' : 'none',
+            border: recommended ? '2px solid var(--tv-primary)' : '1px solid var(--color-border)',
+            transform: recommended ? 'scale(1.03)' : 'none',
             zIndex: recommended ? 10 : 1
         }}>
             {recommended && (
                 <div style={{
                     position: 'absolute',
-                    top: '-12px',
+                    top: '-14px',
                     left: '50%',
                     transform: 'translateX(-50%)',
-                    backgroundColor: 'var(--color-primary)',
+                    backgroundColor: 'var(--tv-primary)',
                     color: 'white',
-                    padding: '4px 12px',
+                    padding: '6px 16px',
                     borderRadius: '20px',
                     fontSize: '0.8rem',
-                    fontWeight: 'bold'
+                    fontWeight: 'bold',
+                    boxShadow: '0 4px 12px rgba(26,58,143,0.2)'
                 }}>RECOMMENDED</div>
             )}
-            <div>
-                <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>{title}</h3>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
-                    <span style={{ fontSize: '3rem', fontWeight: 800 }}>{isFree ? '₹0' : `₹${price}`}</span>
-                    {!isFree && <span style={{ color: 'var(--color-text-muted)' }}>/ one-time</span>}
+            <div style={{ textAlign: 'center' }}>
+                <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: 'var(--tv-primary)' }}>{title}</h3>
+                <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: '4px' }}>
+                    <span style={{ fontSize: '3rem', fontWeight: 800, color: 'var(--color-text-main)', fontFamily: 'var(--font-heading)' }}>{isFree ? '₹0' : `₹${price}`}</span>
                 </div>
+                {!isFree && <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', margin: '0.25rem 0 0 0' }}>One-time payment</p>}
             </div>
+
+            <div style={{ height: '1px', background: 'var(--color-border)', margin: '0.5rem 0' }}></div>
 
             <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1 }}>
                 {features.map((feature, idx) => (
-                    <li key={idx} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                        <CheckCircle size={18} color="var(--color-success)" />
-                        <span style={{ color: 'var(--color-text-muted)' }}>{feature}</span>
+                    <li key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
+                        <CheckCircle size={20} color="var(--color-success)" style={{ flexShrink: 0, marginTop: '2px' }} />
+                        <span style={{ color: 'var(--color-text-dark)', fontSize: '0.95rem' }}>{feature}</span>
                     </li>
                 ))}
             </ul>
 
             <button
-                className="btn-primary"
+                className={recommended ? "btn-primary" : "btn-outline"}
                 onClick={onUpgrade}
-                style={{
-                    width: '100%',
-                    marginTop: 'auto',
-                    backgroundColor: recommended ? 'var(--color-primary)' : 'transparent',
-                    border: '1px solid var(--color-primary)',
-                    color: recommended ? 'white' : 'var(--color-primary)',
-                    cursor: 'pointer'
-                }}>
+                style={{ width: '100%', marginTop: '1.5rem', padding: '0.85rem' }}>
                 {buttonText}
             </button>
         </div>
@@ -69,35 +67,16 @@ const PricingCard = ({ title, price, features, recommended = false, buttonText, 
 const FAQItem = ({ question, answer }) => {
     const [isOpen, setIsOpen] = useState(false);
     return (
-        <div style={{ borderBottom: '1px solid var(--glass-border)', padding: '1.5rem 0' }}>
+        <div style={{ borderBottom: '1px solid var(--color-border)', padding: '1.25rem 0' }}>
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', background: 'none', border: 'none', color: 'var(--color-text-main)', fontSize: '1.2rem', fontWeight: 500, cursor: 'pointer', textAlign: 'left', padding: 0 }}
+                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', background: 'none', border: 'none', color: 'var(--color-text-dark)', fontSize: '1.1rem', fontWeight: 600, cursor: 'pointer', textAlign: 'left', padding: 0 }}
             >
                 {question}
-                <ChevronDown size={20} style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s ease' }} />
+                <ChevronDown size={20} style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s ease', color: 'var(--tv-primary)' }} />
             </button>
-            {isOpen && <p style={{ color: 'var(--color-text-muted)', marginTop: '1rem', lineHeight: 1.6 }}>{answer}</p>}
+            {isOpen && <p style={{ color: 'var(--color-text-muted)', marginTop: '1rem', lineHeight: 1.6, fontSize: '0.95rem' }}>{answer}</p>}
         </div>
-    );
-};
-
-const Navbar = () => {
-    return (
-        <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.5rem 2rem', borderBottom: '1px solid var(--glass-border)', backgroundColor: 'rgba(15, 23, 42, 0.8)', backdropFilter: 'blur(10px)', position: 'sticky', top: 0, zIndex: 100, flexWrap: 'wrap', gap: '1rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Zap size={24} color="var(--color-primary)" />
-                <span style={{ fontSize: '1.5rem', fontWeight: 800, background: 'linear-gradient(to right, #3b82f6, #8b5cf6)', WebkitBackgroundClip: 'text', color: 'transparent' }}>SkillTester</span>
-            </div>
-
-            <div style={{ display: 'flex', gap: '2rem', alignItems: 'center', flexWrap: 'wrap' }} className="desktop-menu">
-                <a href="#features" style={{ color: 'var(--color-text-main)', textDecoration: 'none', fontWeight: 500 }}>Features</a>
-                <a href="#how-it-works" style={{ color: 'var(--color-text-main)', textDecoration: 'none', fontWeight: 500 }}>How it Works</a>
-                <a href="#pricing" style={{ color: 'var(--color-text-main)', textDecoration: 'none', fontWeight: 500 }}>Pricing</a>
-                <a href="#faq" style={{ color: 'var(--color-text-main)', textDecoration: 'none', fontWeight: 500 }}>FAQ</a>
-                <Link to="/login" className="btn-primary" style={{ padding: '0.5rem 1.25rem', fontSize: '0.9rem', textDecoration: 'none' }}>Log In</Link>
-            </div>
-        </nav>
     );
 };
 
@@ -110,267 +89,236 @@ const LandingPage = () => {
             navigate('/login');
             return;
         }
-
         try {
-            // 1. Create Order
             const { data: orderRes } = await api.post('/payments/create-order', { planId });
-
-            if (orderRes.status !== 'success') {
-                throw new Error(orderRes.message || 'Failed to create payment order.');
-            }
-
+            if (orderRes.status !== 'success') throw new Error(orderRes.message || 'Failed to create order.');
+            
             const { orderId, amount, currency } = orderRes.data;
-
-            // 2. Open Razorpay Checkout
             const options = {
                 key: import.meta.env.VITE_RAZORPAY_KEY_ID,
                 amount: amount,
                 currency: currency,
-                name: 'Skill Tester',
-                description: `Upgrade to ${planId} plan`,
+                name: 'Tech Vedhu',
+                description: `Skill Tester - ${planId} plan`,
                 order_id: orderId,
                 handler: async (response) => {
                     try {
-                        // 3. Verify Payment
                         const { data: verifyRes } = await api.post('/payments/verify', {
                             razorpay_order_id: response.razorpay_order_id,
                             razorpay_payment_id: response.razorpay_payment_id,
                             razorpay_signature: response.razorpay_signature,
                             planId: planId
                         });
-
                         if (verifyRes.status === 'success') {
-                            alert(`Success! Your account has been upgraded to ${planId}.`);
-                            // Move to dashboard and refresh
+                            alert(`Success! Upgraded to ${planId}.`);
                             navigate('/dashboard');
                             window.location.reload();
-                        } else {
-                            alert('Payment verification failed.');
-                        }
-                    } catch (err) {
-                        console.error('Verification Error:', err);
-                        alert('Error verifying payment: ' + (err.response?.data?.message || err.message));
-                    }
+                        } else alert('Payment verification failed.');
+                    } catch (err) { alert('Error: ' + (err.response?.data?.message || err.message)); }
                 },
-                prefill: {
-                    name: user.displayName || '',
-                    email: user.email || '',
-                },
-                theme: {
-                    color: '#3b82f6',
-                },
+                prefill: { name: user.displayName || '', email: user.email || '' },
+                theme: { color: '#1a3a8f' },
             };
-
             const rzp = new window.Razorpay(options);
-            rzp.on('payment.failed', function (response) {
-                alert('Payment failed: ' + response.error.description);
-            });
+            rzp.on('payment.failed', function (response) { alert('Payment failed: ' + response.error.description); });
             rzp.open();
-
-        } catch (err) {
-            console.error('Upgrade Error:', err);
-            alert('Could not initiate upgrade: ' + (err.response?.data?.message || err.message));
-        }
+        } catch (err) { alert('Could not initiate upgrade: ' + (err.response?.data?.message || err.message)); }
     };
 
     return (
         <>
             <Helmet>
-                <title>Skill Tester | AI Mock Interviews for Software Engineers</title>
-                <meta name="description" content="SkillTester is an AI-powered mock interview platform for developers. Practice technical and behavioral questions, write live code, and get instant feedback." />
-                <link rel="canonical" href="https://skilltester.app/" />
-                <meta name="robots" content="index, follow" />
-                <script type="application/ld+json">{`
-            {
-              "@context": "https://schema.org",
-              "@type": "FAQPage",
-              "mainEntity": [
-                {
-                  "@type": "Question",
-                  "name": "How does the AI mock interview work?",
-                  "acceptedAnswer": { "@type": "Answer", "text": "Our AI analyzes the job description and your resume to generate questions an actual hiring manager would ask. During the interview, it listens to your voice, processes your code, and dynamically asks follow-up questions." }
-                },
-                {
-                  "@type": "Question",
-                  "name": "Can I practice data structures and algorithms?",
-                  "acceptedAnswer": { "@type": "Answer", "text": "Yes! Our integrated code editor supports multiple languages. The AI will give you an algorithmic challenge and watch as you code, offering hints if you get stuck." }
-                },
-                {
-                  "@type": "Question",
-                  "name": "Is the code editor suitable for live coding interviews?",
-                  "acceptedAnswer": { "@type": "Answer", "text": "Absolutely. We use a real execution engine that compiles and runs your code. It's the same environment you'll face in a real technical screen." }
-                },
-                {
-                  "@type": "Question",
-                  "name": "How accurate is the feedback?",
-                  "acceptedAnswer": { "@type": "Answer", "text": "The AI provides highly granular feedback. It evaluates code space/time complexity, catches bugs, and even assesses your communication clarity on behavioral questions." }
-                }
-              ]
-            }
-            `}</script>
+                <title>Skill Tester by Tech Vedhu | Master Your Next Tech Interview</title>
+                <meta name="description" content="SkillTester by Tech Vedhu is an AI-powered mock interview platform. Practice technical and behavioral questions, and get instant feedback." />
             </Helmet>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6rem', paddingBottom: '4rem' }}>
+
+            <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: 'var(--color-bg)' }}>
                 <Navbar />
 
-                {/* Hero Section */}
-                <section style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    textAlign: 'center',
-                    paddingTop: '4rem',
-                    maxWidth: '800px',
-                    margin: '0 auto',
-                    gap: '1.5rem'
-                }}>
-                    <div style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        padding: '6px 16px',
-                        borderRadius: '30px',
-                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                        border: '1px solid rgba(59, 130, 246, 0.2)',
-                        color: 'var(--color-primary)',
-                        fontWeight: 500,
-                        fontSize: '0.9rem',
-                        marginBottom: '1rem'
-                    }}>
-                        <Zap size={16} /> Welcome to the future of interviewing
-                    </div>
+                {/* ─── Hero Section ─── */}
+                <section style={{ backgroundColor: 'var(--color-bg)', paddingTop: '4rem', paddingBottom: '3rem' }}>
+                    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 1.5rem', display: 'flex', alignItems: 'center', gap: '3rem', flexWrap: 'wrap' }}>
+                        
+                        <div style={{ flex: '1 1 500px' }} className="animate-fade-in-up">
+                            <h1 style={{ fontSize: '3.5rem', lineHeight: 1.15, color: 'var(--color-text-main)', marginBottom: '1.5rem' }}>
+                                Learn Just Like You Would be in the <span style={{ color: 'var(--tv-primary)' }}>Best Tech Companies in India</span>
+                            </h1>
+                            <p style={{ fontSize: '1.1rem', color: 'var(--color-text-dark)', marginBottom: '2rem', maxWidth: '550px' }}>
+                                Work-experience-based learning personalized way programs to Supercharge your career and land your dream tech job
+                            </p>
 
-                    <h1 style={{ fontSize: '4rem', lineHeight: 1.1, backgroundImage: 'linear-gradient(to right, #f8fafc, #94a3b8)', WebkitBackgroundClip: 'text', color: 'transparent' }}>
-                        Master Your Next Tech Interview with AI
-                    </h1>
+                            <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 2.5rem 0', display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                                <li style={{ fontSize: '1.05rem', color: 'var(--color-text-dark)' }}>
+                                    <strong style={{ color: 'var(--tv-primary)' }}>Build</strong> professional projects with professionals.
+                                </li>
+                                <li style={{ fontSize: '1.05rem', color: 'var(--color-text-dark)' }}>
+                                    <strong style={{ color: 'var(--tv-primary)' }}>Master</strong> the current cutting-edge technologies
+                                </li>
+                                <li style={{ fontSize: '1.05rem', color: 'var(--color-text-dark)' }}>
+                                    <strong style={{ color: 'var(--tv-primary)' }}>Crack</strong> your dream role at the best tech companies
+                                </li>
+                            </ul>
 
-                    <p style={{ fontSize: '1.2rem', color: 'var(--color-text-muted)', maxWidth: '600px' }}>
-                        Practice technical and behavioral questions tailored to your resume and exact job description. Get real-time feedback, code pair with an AI, and land your dream job faster.
-                    </p>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
+                                <PlayCircle size={32} color="var(--tv-primary)" />
+                                <span style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--tv-primary)', fontFamily: 'var(--font-heading)' }}>
+                                    Upskill with Tech Vedhu
+                                </span>
+                            </div>
 
-                    <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-                        <Link to="/login" className="btn-primary" style={{ padding: '1rem 2rem', fontSize: '1.1rem', textDecoration: 'none' }}>Get Started for Free</Link>
+                            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                                <Link to="/login" className="btn-outline" style={{ minWidth: '200px' }}>Explore Programs</Link>
+                                <Link to="/login" className="btn-primary" style={{ minWidth: '200px' }}>Book Your Free Trial, Now</Link>
+                            </div>
+                        </div>
+
+                        {/* Hero Image placeholder (since we don't have the exact image) */}
+                        <div style={{ flex: '1 1 400px', display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative' }}>
+                             <div style={{
+                                 width: '100%', maxWidth: '500px', aspectRatio: '1/1',
+                                 background: 'linear-gradient(135deg, #e8edf8, #f4f6fb)',
+                                 borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                 position: 'relative'
+                             }}>
+                                 {/* Decorative elements to mimic the screenshot */}
+                                 <div style={{ position: 'absolute', top: '10%', right: '10%', background: 'var(--tv-primary)', color: 'white', padding: '8px', borderRadius: '50%' }}><MonitorPlay size={20} /></div>
+                                 <div style={{ position: 'absolute', bottom: '20%', left: '5%', background: 'white', padding: '12px 20px', borderRadius: '12px', boxShadow: 'var(--card-shadow)', display: 'flex', gap: '1rem' }}>
+                                     <div>
+                                         <div style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)', fontWeight: 600 }}>Registered</div>
+                                         <div style={{ color: 'var(--tv-primary)', fontWeight: 800, fontSize: '1.1rem' }}>10.7k</div>
+                                     </div>
+                                     <div style={{ width: '1px', background: 'var(--color-border)' }}></div>
+                                     <div>
+                                         <div style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)', fontWeight: 600 }}>Languages</div>
+                                         <div style={{ color: '#f97316', fontWeight: 800, fontSize: '1.1rem' }}>10+</div>
+                                     </div>
+                                 </div>
+                                 <Briefcase size={120} color="var(--tv-primary)" style={{ opacity: 0.1 }} />
+                             </div>
+                        </div>
+
                     </div>
                 </section>
 
-                {/* Features Section */}
-                <section id="features" style={{ maxWidth: '1200px', margin: '0 auto', width: '100%' }}>
-                    <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-                        <h2 style={{ fontSize: '2.5rem' }}>Why choose our AI platform?</h2>
-                        <p style={{ fontSize: '1.1rem' }}>Comprehensive tools to help you prepare effectively.</p>
+                {/* ─── Stats Bar ─── */}
+                <section className="tv-stats-bar">
+                    <div className="tv-stats-inner">
+                        <div className="tv-stat-item">
+                            <span className="tv-stat-number">1000+</span>
+                            <span className="tv-stat-label">Learning hours</span>
+                        </div>
+                        <div className="tv-stat-item">
+                            <span className="tv-stat-number">92%</span>
+                            <span className="tv-stat-label">Of learners noted a positive<br/>impact on productivity</span>
+                        </div>
+                        <div className="tv-stat-item">
+                            <span className="tv-stat-number">50%</span>
+                            <span className="tv-stat-label">Average salary hike</span>
+                        </div>
+                        <div className="tv-stat-item">
+                            <span className="tv-stat-number">100+</span>
+                            <span className="tv-stat-label">Hiring partners</span>
+                        </div>
                     </div>
+                </section>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
+                {/* ─── Why Choose Us (Features) ─── */}
+                <section id="features" className="tv-section" style={{ backgroundColor: 'var(--color-bg)' }}>
+                    <h2 className="tv-section-title" style={{ marginBottom: '3rem' }}>Why Choose Us</h2>
+                    
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem' }}>
                         {[
-                            { icon: <FileText size={32} color="var(--color-primary)" />, title: "Resume & Job Targeted", desc: "Upload your PDF resume and target job description. The AI generates specific, relevant questions just like a real engineering manager." },
-                            { icon: <Code size={32} color="var(--color-accent)" />, title: "Integrated Code Editor", desc: "Solve algorithmic and system design problems in a built-in code editor while communicating with your AI interviewer." },
-                            { icon: <Bot size={32} color="var(--color-secondary)" />, title: "Adaptive Voice AI", desc: "Speak directly to the AI. It extracts meaning, asks natural follow-up questions, and dynamically adapts the interview flow." }
+                            { icon: <MonitorPlay size={32} color="var(--tv-primary)" />, title: "Live interactive class", desc: "Engage directly with AI-driven interactive coding sessions that simulate real interviews." },
+                            { icon: <Briefcase size={32} color="var(--tv-primary)" />, title: "Gain working experience", desc: "Solve real-world company problems sourced directly from active hiring pipelines." },
+                            { icon: <Headphones size={32} color="var(--tv-primary)" />, title: "1-1 assistance", desc: "Get detailed voice feedback and code reviews just like a real engineering manager." },
+                            { icon: <Users size={32} color="var(--tv-primary)" />, title: "Expert advice", desc: "Actionable steps to improve your space/time complexity and communication." },
+                            { icon: <CheckCircle size={32} color="var(--tv-primary)" />, title: "Mock assessment", desc: "Timed coding challenges integrated with a complete execution environment." },
+                            { icon: <Star size={32} color="var(--tv-primary)" />, title: "Placement guaranteed", desc: "Build the confidence you need to crack your dream role at top tech companies." }
                         ].map((feat, i) => (
-                            <div key={i} className="glass-card" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                                <div style={{
-                                    width: '60px', height: '60px', borderRadius: '12px',
-                                    backgroundColor: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center'
-                                }}>
+                            <div key={i} className="tv-card" style={{ padding: '2.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '1rem' }}>
+                                <div style={{ marginBottom: '0.5rem' }}>
                                     {feat.icon}
                                 </div>
-                                <h3 style={{ fontSize: '1.5rem', margin: 0 }}>{feat.title}</h3>
-                                <p style={{ margin: 0 }}>{feat.desc}</p>
+                                <h3 style={{ fontSize: '1.25rem', margin: 0, color: 'var(--color-text-dark)' }}>{feat.title}</h3>
+                                <p style={{ margin: 0, fontSize: '0.95rem' }}>{feat.desc}</p>
                             </div>
                         ))}
                     </div>
                 </section>
 
-                {/* How it Works Section */}
-                <section id="how-it-works" style={{ maxWidth: '1200px', margin: '0 auto', width: '100%', padding: '0 1rem' }}>
-                    <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-                        <h2 style={{ fontSize: '2.5rem' }}>How it works</h2>
-                        <p style={{ fontSize: '1.1rem', color: 'var(--color-text-muted)' }}>Three simple steps to interview mastery.</p>
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
-                        {[
-                            { icon: <Target size={32} color="var(--color-primary)" />, step: "1", title: "Target Your Goal", desc: "Upload your resume and paste a job description. We tailor the interview specifically to your exact needs." },
-                            { icon: <Play size={32} color="var(--color-accent)" />, step: "2", title: "Start the Interview", desc: "Join an interactive session with our AI avatar. Answer behavioral and technical coding questions in real-time." },
-                            { icon: <MessageSquare size={32} color="var(--color-secondary)" />, step: "3", title: "Get Instant Feedback", desc: "Receive highly detailed feedback on your communication, code optimality, and areas for improvement." }
-                        ].map((feat, i) => (
-                            <div key={i} className="glass-card" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem', position: 'relative' }}>
-                                <div style={{ position: 'absolute', top: '-15px', right: '-15px', width: '40px', height: '40px', borderRadius: '50%', backgroundColor: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', fontWeight: 'bold', color: 'white', zIndex: 10 }}>{feat.step}</div>
-                                <div style={{ width: '60px', height: '60px', borderRadius: '12px', backgroundColor: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    {feat.icon}
+                {/* ─── Companies Marquee ─── */}
+                <section style={{ backgroundColor: 'var(--color-bg-section)', padding: '4rem 0', textAlign: 'center' }}>
+                    <h2 style={{ fontSize: '2rem', color: 'var(--tv-primary)', fontFamily: 'var(--font-heading)', marginBottom: '3rem' }}>Our Learners Work at</h2>
+                    
+                    <div className="tv-marquee-wrapper">
+                        <div className="tv-marquee-track">
+                            {/* Duplicated for smooth infinite scroll */}
+                            {["Microsoft", "Amazon", "Walmart", "Cognizant", "Accenture", "Zoho"].map((company, i) => (
+                                <div key={i} className="tv-marquee-logo">
+                                    <span style={{ color: company === "Amazon" ? "#ff9900" : company === "Zoho" ? "#eab308" : "var(--tv-primary)" }}>✦</span> 
+                                    {company}
                                 </div>
-                                <h3 style={{ fontSize: '1.5rem', margin: 0 }}>{feat.title}</h3>
-                                <p style={{ margin: 0, color: 'var(--color-text-muted)' }}>{feat.desc}</p>
-                            </div>
-                        ))}
+                            ))}
+                            {["Microsoft", "Amazon", "Walmart", "Cognizant", "Accenture", "Zoho"].map((company, i) => (
+                                <div key={i+10} className="tv-marquee-logo">
+                                    <span style={{ color: company === "Amazon" ? "#ff9900" : company === "Zoho" ? "#eab308" : "var(--tv-primary)" }}>✦</span> 
+                                    {company}
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </section>
 
-                {/* Pricing Section */}
-                <section id="pricing" style={{ maxWidth: '1200px', margin: '0 auto', width: '100%' }}>
-                    <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
-                        <h2 style={{ fontSize: '2.5rem' }}>Simple, transparent pricing</h2>
-                        <p style={{ fontSize: '1.1rem' }}>Start for free, upgrade when you need more practice.</p>
+                {/* ─── Pricing Section ─── */}
+                <section id="pricing" className="tv-section">
+                    <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+                        <h2 className="tv-section-title" style={{ fontSize: '2.25rem', color: 'var(--tv-primary)' }}>Internship Based / Certificate Program</h2>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '2rem', alignItems: 'center' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem', alignItems: 'center', maxWidth: '1000px', margin: '0 auto' }}>
                         <PricingCard
-                            title="Free Tier"
+                            title="Free Access"
                             price="0"
                             features={["1 AI mock interview", "Basic text feedback", "Adaptive questions"]}
-                            buttonText="Start Free"
+                            buttonText="Start Free Trial"
                             onUpgrade={() => navigate('/login')}
                         />
                         <PricingCard
-                            title="Basic"
-                            price="89"
-                            features={["3 AI mock interviews", "Detailed performance report", "Timer & voice mode enabled"]}
-                            buttonText="Buy Basic"
-                            onUpgrade={() => handleUpgrade('basic')}
-                        />
-                        <PricingCard
-                            title="Intermediate"
+                            title="Pro Program"
                             price="250"
                             features={["10 AI mock interviews", "Advanced technical questions", "Code editor integration", "Analytics dashboard"]}
                             recommended={true}
-                            buttonText="Buy Intermediate"
+                            buttonText="Enroll Now"
                             onUpgrade={() => handleUpgrade('intermediate')}
                         />
-                        <PricingCard
-                            title="Pro"
-                            price="479"
-                            features={["23 AI mock interviews", "Priority AI generation", "Unlimited resume updates", "Priority email support"]}
-                            buttonText="Buy Pro"
-                            onUpgrade={() => handleUpgrade('pro')}
-                        />
-
                     </div>
                 </section>
 
-                {/* FAQ Section */}
-                <section id="faq" style={{ maxWidth: '800px', margin: '0 auto', width: '100%', padding: '0 1rem' }}>
-                    <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-                        <h2 style={{ fontSize: '2.5rem' }}>Frequently Asked Questions</h2>
-                        <p style={{ fontSize: '1.1rem', color: 'var(--color-text-muted)' }}>Everything you need to know about SkillTester.</p>
+                {/* ─── FAQ Section ─── */}
+                <section id="faq" className="tv-section" style={{ maxWidth: '800px', paddingTop: '2rem' }}>
+                    <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                        <h2 className="tv-section-title" style={{ color: 'var(--color-text-dark)' }}>Frequently Asked Questions</h2>
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <div className="tv-card" style={{ padding: '0 2rem' }}>
                         <FAQItem question="How does the AI mock interview work?" answer="Our AI analyzes the job description and your resume to generate questions an actual hiring manager would ask. During the interview, it listens to your voice, processes your code, and dynamically asks follow-up questions." />
                         <FAQItem question="Can I practice data structures and algorithms?" answer="Yes! Our integrated code editor supports multiple languages. The AI will give you an algorithmic challenge and watch as you code, offering hints if you get stuck." />
                         <FAQItem question="Is the code editor suitable for live coding interviews?" answer="Absolutely. We use a real execution engine that compiles and runs your code. It's the same environment you'll face in a real technical screen." />
-                        <FAQItem question="How accurate is the feedback?" answer="The AI provides highly granular feedback. It evaluates code space/time complexity, catches bugs, and even assesses your communication clarity on behavioral questions." />
                     </div>
                 </section>
 
-                {/* Footer with SEO Links */}
-                <footer style={{ borderTop: '1px solid var(--color-border)', paddingTop: '2rem', marginTop: '2rem', textAlign: 'center' }}>
-                    <div style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }}>
-                        <div style={{ display: 'flex', justifyContent: 'center', gap: '1.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                            <span>© 2026 SkillTester.app</span>
-                            <Link to="/terms" style={{ color: 'var(--color-text-main)', textDecoration: 'none' }}>Terms of Service</Link>
-                            <Link to="/privacy" style={{ color: 'var(--color-text-main)', textDecoration: 'none' }}>Privacy Policy</Link>
-                            <Link to="/seo-tutorial" style={{ color: 'var(--color-text-main)', textDecoration: 'none' }}>SEO Tutorial</Link>
-                            <a href="#features" style={{ color: 'var(--color-text-main)', textDecoration: 'none' }}>Features</a>
-                            <a href="#how-it-works" style={{ color: 'var(--color-text-main)', textDecoration: 'none' }}>How it Works</a>
+                {/* ─── Footer ─── */}
+                <footer style={{ backgroundColor: 'var(--tv-primary-dark)', padding: '3rem 0 2rem 0', marginTop: 'auto' }}>
+                    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 1.5rem', display: 'flex', flexDirection: 'column', gap: '2rem', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', flexWrap: 'wrap' }}>
+                            <Link to="/" style={{ color: 'white', textDecoration: 'none', fontSize: '0.95rem' }}>Home</Link>
+                            <Link to="/terms" style={{ color: 'white', textDecoration: 'none', fontSize: '0.95rem' }}>Terms of Service</Link>
+                            <Link to="/privacy" style={{ color: 'white', textDecoration: 'none', fontSize: '0.95rem' }}>Privacy Policy</Link>
+                            <a href="#features" style={{ color: 'white', textDecoration: 'none', fontSize: '0.95rem' }}>Features</a>
                         </div>
-                        <div style={{ fontSize: '0.8rem', opacity: 0.8 }}>
-                            Billing Label: <strong>TN SOFTWARE SYSTEMS</strong>
+                        <div style={{ width: '100%', height: '1px', backgroundColor: 'rgba(255,255,255,0.1)' }}></div>
+                        <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem', textAlign: 'center' }}>
+                            © {new Date().getFullYear()} Tech Vedhu SkillTester. All rights reserved. <br/>
+                            <span style={{ opacity: 0.7, marginTop: '8px', display: 'block' }}>Billing Label: TN SOFTWARE SYSTEMS</span>
                         </div>
                     </div>
                 </footer>

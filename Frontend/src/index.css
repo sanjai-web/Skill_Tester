@@ -1,49 +1,63 @@
-:root {
-  /* Color Palette */
-  --color-bg-dark: #0f172a;
-  /* Slate 900 */
-  --color-bg-panel: rgba(30, 41, 59, 0.7);
-  /* Slate 800 with opacity for glassmorphism */
-  --color-primary: #3b82f6;
-  /* Blue 500 */
-  --color-primary-hover: #2563eb;
-  /* Blue 600 */
-  --color-secondary: #ec4899;
-  /* Pink 500 */
-  --color-accent: #8b5cf6;
-  /* Violet 500 */
-  --color-text-main: #f8fafc;
-  /* Slate 50 */
-  --color-text-muted: #94a3b8;
-  /* Slate 400 */
-  --color-border: rgba(255, 255, 255, 0.1);
-  --color-success: #10b981;
-  --color-danger: #ef4444;
-  --color-warning: #f59e0b;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap');
 
-  /* Glassmorphism */
-  --glass-bg: rgba(255, 255, 255, 0.05);
-  --glass-border: 1px solid rgba(255, 255, 255, 0.1);
-  --glass-blur: blur(12px);
+:root {
+  /* TechVedhu Brand Colors */
+  --tv-primary: #1a3a8f;
+  --tv-primary-dark: #142d70;
+  --tv-primary-light: #2a4ea6;
+  --tv-primary-xlight: #e8edf8;
+
+  /* Backgrounds */
+  --color-bg: #ffffff;
+  --color-bg-section: #f4f6fb;
+  --color-bg-stats: #e8edf8;
+  --color-bg-dark: #1a3a8f;
+
+  /* Text */
+  --color-text-main: #1a1a2e;
+  --color-text-dark: #0f172a;
+  --color-text-muted: #64748b;
+  --color-text-light: #94a3b8;
+  --color-text-white: #ffffff;
+
+  /* Borders */
+  --color-border: #e2e8f0;
+  --color-border-strong: #cbd5e1;
+
+  /* Status */
+  --color-success: #22c55e;
+  --color-danger: #ef4444;
+  --color-warning: #f97316;
+  --color-warning-light: #fff7ed;
+
+  /* Cards */
+  --card-shadow: 0 2px 16px rgba(26, 58, 143, 0.08);
+  --card-shadow-hover: 0 8px 32px rgba(26, 58, 143, 0.16);
+  --card-radius: 12px;
+
+  /* Navbar */
+  --navbar-bg: #1a3a8f;
+  --navbar-height: 64px;
 
   /* Typography */
-  --font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  --font-family: 'Inter', 'Poppins', system-ui, Helvetica, Arial, sans-serif;
+  --font-heading: 'Poppins', 'Inter', system-ui, sans-serif;
+}
+
+/* ─── Reset & Base ──────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
 }
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
   min-width: 320px;
   min-height: 100vh;
-  background-color: var(--color-bg-dark);
+  background-color: var(--color-bg);
   color: var(--color-text-main);
   font-family: var(--font-family);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-image: radial-gradient(circle at top right, rgba(59, 130, 246, 0.15), transparent 40%),
-    radial-gradient(circle at bottom left, rgba(139, 92, 246, 0.15), transparent 40%);
-  background-attachment: fixed;
 }
 
 #root {
@@ -53,17 +67,36 @@ body {
   flex-direction: column;
 }
 
-/* Glass Card Utility */
-.glass-card {
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: var(--glass-border);
-  border-radius: 16px;
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+/* ─── Typography ─────────────────────────────────────────────── */
+h1, h2, h3, h4, h5, h6 {
+  margin-top: 0;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-text-dark);
 }
 
-/* Button Reset */
+p {
+  color: var(--color-text-muted);
+  line-height: 1.7;
+  margin-top: 0;
+}
+
+/* ─── TechVedhu Card ─────────────────────────────────────────── */
+.tv-card {
+  background: #ffffff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--card-radius);
+  box-shadow: var(--card-shadow);
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+.tv-card:hover {
+  box-shadow: var(--card-shadow-hover);
+  transform: translateY(-3px);
+}
+
+/* ─── Buttons ─────────────────────────────────────────────────── */
 button {
   border: none;
   background: none;
@@ -73,90 +106,280 @@ button {
 }
 
 .btn-primary {
-  background-color: var(--color-primary);
+  background-color: var(--tv-primary);
   color: white;
-  padding: 0.75rem 1.5rem;
+  padding: 0.75rem 1.75rem;
   border-radius: 8px;
   font-weight: 600;
+  font-size: 0.95rem;
+  border: 2px solid var(--tv-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  transition: all 0.2s ease;
 }
 
 .btn-primary:hover {
-  background-color: var(--color-primary-hover);
-  transform: translateY(-1px);
+  background-color: var(--tv-primary-dark);
+  border-color: var(--tv-primary-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(26, 58, 143, 0.3);
 }
 
-/* Typography styles */
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  margin-top: 0;
-  color: var(--color-text-main);
+.btn-outline {
+  background-color: transparent;
+  color: var(--tv-primary);
+  padding: 0.75rem 1.75rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border: 2px solid var(--tv-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.btn-outline:hover {
+  background-color: var(--tv-primary);
+  color: white;
+  transform: translateY(-2px);
+}
+
+.btn-white-outline {
+  background-color: transparent;
+  color: white;
+  padding: 0.5rem 1.25rem;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.btn-white-outline:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+/* ─── Section Utilities ──────────────────────────────────────── */
+.tv-section {
+  padding: 5rem 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.tv-section-title {
+  font-family: var(--font-heading);
+  font-size: 2.25rem;
   font-weight: 700;
-  letter-spacing: -0.025em;
+  color: var(--tv-primary);
+  text-align: center;
+  margin-bottom: 0.75rem;
 }
 
-p {
+.tv-section-subtitle {
+  font-size: 1.05rem;
   color: var(--color-text-muted);
-  line-height: 1.6;
+  text-align: center;
+  margin-bottom: 3rem;
 }
 
-/* Base custom scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
+/* ─── Stats Bar ──────────────────────────────────────────────── */
+.tv-stats-bar {
+  background: var(--color-bg-stats);
+  width: 100%;
+  padding: 2rem 1.5rem;
 }
 
-::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.1);
+.tv-stats-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
 }
 
-::-webkit-scrollbar-thumb {
-  background: var(--color-border);
-  border-radius: 4px;
+.tv-stat-item {
+  text-align: center;
+  padding: 1.25rem 1rem;
+  border-right: 1px solid var(--color-border-strong);
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: var(--color-text-muted);
+.tv-stat-item:last-child {
+  border-right: none;
 }
 
-/* Animations */
+.tv-stat-number {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--tv-primary);
+  font-family: var(--font-heading);
+  display: block;
+}
+
+.tv-stat-label {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  margin-top: 0.25rem;
+}
+
+/* ─── Badge ──────────────────────────────────────────────────── */
+.tv-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.tv-badge-blue {
+  background: rgba(26, 58, 143, 0.08);
+  color: var(--tv-primary);
+  border: 1px solid rgba(26, 58, 143, 0.2);
+}
+
+.tv-badge-orange {
+  background: #fff7ed;
+  color: #ea580c;
+  border: 1px solid #fed7aa;
+}
+
+.tv-badge-green {
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+}
+
+/* ─── Company Logo Marquee ───────────────────────────────────── */
+.tv-marquee-wrapper {
+  overflow: hidden;
+  background: var(--color-bg);
+  padding: 1.5rem 0;
+}
+
+.tv-marquee-track {
+  display: flex;
+  align-items: center;
+  gap: 3rem;
+  animation: marquee 24s linear infinite;
+  white-space: nowrap;
+  width: max-content;
+}
+
+.tv-marquee-track:hover {
+  animation-play-state: paused;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.tv-marquee-logo {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: white;
+}
+
+/* ─── Icon Box ───────────────────────────────────────────────── */
+.tv-icon-box {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  background: var(--tv-primary-xlight);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+/* ─── Form Inputs (light theme) ─────────────────────────────── */
+.tv-input {
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 2.75rem;
+  border-radius: 8px;
+  border: 1.5px solid var(--color-border-strong);
+  background: #fff;
+  color: var(--color-text-dark);
+  font-size: 0.95rem;
+  font-family: inherit;
+  box-sizing: border-box;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.tv-input:focus {
+  outline: none;
+  border-color: var(--tv-primary);
+  box-shadow: 0 0 0 3px rgba(26, 58, 143, 0.12);
+}
+
+.tv-input::placeholder {
+  color: var(--color-text-light);
+}
+
+/* ─── Scrollbar ──────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--color-bg-section); }
+::-webkit-scrollbar-thumb { background: var(--color-border-strong); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-text-muted); }
+
+/* ─── Animations ─────────────────────────────────────────────── */
 @keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-
-  to {
-    transform: rotate(360deg);
-  }
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 @keyframes pulse {
-
-  0%,
-  100% {
-    opacity: 1;
-  }
-
-  50% {
-    opacity: 0.4;
-  }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 
-/* Accessibility - keyboard focus styles */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-12px); }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s ease forwards;
+}
+
+/* ─── Accessibility ──────────────────────────────────────────── */
 :focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: 2px solid var(--tv-primary);
   outline-offset: 3px;
   border-radius: 4px;
 }
 
-/* Skip to main content - screen reader + keyboard accessibility */
 .skip-link {
   position: absolute;
   top: -40px;
   left: 0;
-  background: var(--color-primary);
+  background: var(--tv-primary);
   color: white;
   padding: 8px 16px;
   z-index: 9999;
@@ -165,6 +388,26 @@ p {
   transition: top 0.2s ease;
 }
 
-.skip-link:focus {
-  top: 0;
+.skip-link:focus { top: 0; }
+
+/* ─── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .tv-stats-inner {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .tv-stat-item:nth-child(2) {
+    border-right: none;
+  }
+
+  .tv-section-title { font-size: 1.75rem; }
+}
+
+@media (max-width: 480px) {
+  .tv-stats-inner {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+
+  .tv-stat-number { font-size: 1.5rem; }
 }

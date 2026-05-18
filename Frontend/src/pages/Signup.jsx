@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { Mail, Lock, User, UserPlus } from 'lucide-react';
 import { AuthContext } from '../contexts/AuthContext';
+import Navbar from '../components/Navbar';
 
 const Signup = () => {
     const [name, setName] = useState('');
@@ -23,7 +24,7 @@ const Signup = () => {
         const result = await loginWithGoogle();
         setIsLoading(false);
         if (result.success) {
-            navigate('/dashboard'); // Go directly to dashboard as Google implies email verified
+            navigate('/dashboard');
         } else {
             setError(result.message);
         }
@@ -47,23 +48,28 @@ const Signup = () => {
 
     if (isSuccess) {
         return (
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh' }}>
-                <div className="glass-card" style={{ width: '100%', maxWidth: '400px', padding: '2.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', textAlign: 'center' }}>
-                    <UserPlus size={48} style={{ color: 'var(--color-primary)', margin: '0 auto' }} />
-                    <h2 style={{ fontSize: '1.75rem', marginBottom: '0.5rem' }}>Account Created!</h2>
-                    {needsEmailConfirmation ? (
-                        <p style={{ color: 'var(--color-text-muted)' }}>
-                            We've sent a confirmation link to <strong>{email}</strong>.
-                            Please click the link to activate your account before logging in.
-                        </p>
-                    ) : (
-                        <p style={{ color: 'var(--color-text-muted)' }}>
-                            Your account has been created successfully. You can now log in to start practicing.
-                        </p>
-                    )}
-                    <Link to="/login" className="btn-primary" style={{ marginTop: '1rem', textDecoration: 'none' }}>
-                        Go to Login
-                    </Link>
+            <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: 'var(--color-bg-section)' }}>
+                <Navbar />
+                <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '2rem 1rem' }}>
+                    <div className="tv-card" style={{ width: '100%', maxWidth: '420px', padding: '3rem 2.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', textAlign: 'center', alignItems: 'center' }}>
+                        <div style={{ width: '64px', height: '64px', borderRadius: '50%', backgroundColor: 'rgba(34, 197, 94, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '0.5rem' }}>
+                            <UserPlus size={32} style={{ color: 'var(--color-success)' }} />
+                        </div>
+                        <h2 style={{ fontSize: '1.8rem', color: 'var(--color-text-dark)', marginBottom: '0.5rem' }}>Account Created!</h2>
+                        {needsEmailConfirmation ? (
+                            <p style={{ color: 'var(--color-text-muted)', lineHeight: 1.6 }}>
+                                We've sent a confirmation link to <strong style={{ color: 'var(--color-text-dark)' }}>{email}</strong>.<br/><br/>
+                                Please click the link to activate your account before logging in.
+                            </p>
+                        ) : (
+                            <p style={{ color: 'var(--color-text-muted)', lineHeight: 1.6 }}>
+                                Your account has been created successfully. You can now log in to start practicing.
+                            </p>
+                        )}
+                        <Link to="/login" className="btn-primary" style={{ marginTop: '1.5rem', textDecoration: 'none', width: '100%' }}>
+                            Go to Login
+                        </Link>
+                    </div>
                 </div>
             </div>
         );
@@ -72,169 +78,139 @@ const Signup = () => {
     return (
         <>
             <Helmet>
-                <title>Sign Up Free | Skill Tester – AI Mock Interview Platform</title>
-                <meta name="description" content="Create a free Skill Tester account. Get 1 free AI mock interview, practice technical and behavioral questions, and get instant feedback to land your dream job." />
+                <title>Sign Up Free | Tech Vedhu Skill Tester</title>
+                <meta name="description" content="Create a free Tech Vedhu Skill Tester account." />
                 <link rel="canonical" href="https://skilltester.app/signup" />
-                <meta name="robots" content="index, follow" />
             </Helmet>
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh' }}>
-                <div className="glass-card" style={{ width: '100%', maxWidth: '400px', padding: '2.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                    <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
-                        <h2 style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>Create Account</h2>
-                        <p style={{ margin: 0 }}>Start practicing for your next big role.</p>
-                    </div>
-
-                    {error && (
-                        <div style={{ backgroundColor: 'rgba(255, 59, 48, 0.1)', border: '1px solid rgba(255, 59, 48, 0.3)', color: '#ff3b30', padding: '0.75rem', borderRadius: '8px', fontSize: '0.9rem', textAlign: 'center' }}>
-                            {error}
+            
+            <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: 'var(--color-bg-section)' }}>
+                <Navbar />
+                
+                <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '2rem 1rem' }}>
+                    <div className="tv-card" style={{ width: '100%', maxWidth: '420px', padding: '2.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                        <div style={{ textAlign: 'center', marginBottom: '0.5rem' }}>
+                            <h2 style={{ fontSize: '1.8rem', color: 'var(--tv-primary)', marginBottom: '0.5rem' }}>Create Account</h2>
+                            <p style={{ margin: 0, color: 'var(--color-text-muted)', fontSize: '0.95rem' }}>Start practicing for your next big role.</p>
                         </div>
-                    )}
 
-                    <form onSubmit={handleSignup} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                            <label style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)', fontWeight: 500 }}>Full Name</label>
-                            <div style={{ position: 'relative' }}>
-                                <User size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }} />
-                                <input
-                                    type="text"
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
-                                    style={{
-                                        width: '100%', padding: '0.75rem 1rem 0.75rem 2.5rem',
-                                        borderRadius: '8px', border: '1px solid var(--color-border)',
-                                        backgroundColor: 'rgba(0,0,0,0.2)', color: 'white',
-                                        boxSizing: 'border-box'
-                                    }}
-                                    placeholder="John Doe"
-                                    required
-                                />
+                        {error && (
+                            <div style={{ backgroundColor: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', padding: '0.75rem', borderRadius: '8px', fontSize: '0.9rem', textAlign: 'center' }}>
+                                {error}
                             </div>
-                        </div>
+                        )}
 
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                            <label style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)', fontWeight: 500 }}>Email Address</label>
-                            <div style={{ position: 'relative' }}>
-                                <Mail size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }} />
-                                <input
-                                    type="email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    style={{
-                                        width: '100%', padding: '0.75rem 1rem 0.75rem 2.5rem',
-                                        borderRadius: '8px', border: '1px solid var(--color-border)',
-                                        backgroundColor: 'rgba(0,0,0,0.2)', color: 'white',
-                                        boxSizing: 'border-box'
-                                    }}
-                                    placeholder="you@example.com"
-                                    required
-                                />
+                        <form onSubmit={handleSignup} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                                <label style={{ fontSize: '0.9rem', color: 'var(--color-text-dark)', fontWeight: 600 }}>Full Name</label>
+                                <div style={{ position: 'relative' }}>
+                                    <User size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-light)' }} />
+                                    <input
+                                        type="text"
+                                        value={name}
+                                        onChange={(e) => setName(e.target.value)}
+                                        className="tv-input"
+                                        placeholder="John Doe"
+                                        required
+                                    />
+                                </div>
                             </div>
-                        </div>
 
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                            <label style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)', fontWeight: 500 }}>Password <span style={{ fontSize: '0.75rem' }}>(min 6 chars)</span></label>
-                            <div style={{ position: 'relative' }}>
-                                <Lock size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }} />
-                                <input
-                                    type="password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    minLength={6}
-                                    style={{
-                                        width: '100%', padding: '0.75rem 1rem 0.75rem 2.5rem',
-                                        borderRadius: '8px', border: '1px solid var(--color-border)',
-                                        backgroundColor: 'rgba(0,0,0,0.2)', color: 'white',
-                                        boxSizing: 'border-box'
-                                    }}
-                                    placeholder="••••••••"
-                                    required
-                                />
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                                <label style={{ fontSize: '0.9rem', color: 'var(--color-text-dark)', fontWeight: 600 }}>Email Address</label>
+                                <div style={{ position: 'relative' }}>
+                                    <Mail size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-light)' }} />
+                                    <input
+                                        type="email"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        className="tv-input"
+                                        placeholder="name@example.com"
+                                        required
+                                    />
+                                </div>
                             </div>
-                        </div>
 
-                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.6rem', marginTop: '0.25rem' }}>
-                            <input
-                                type="checkbox"
-                                id="terms-checkbox"
-                                checked={agreedToTerms}
-                                onChange={(e) => setAgreedToTerms(e.target.checked)}
-                                style={{ marginTop: '3px', accentColor: 'var(--color-primary)', width: '16px', height: '16px', flexShrink: 0, cursor: 'pointer' }}
-                            />
-                            <label htmlFor="terms-checkbox" style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', lineHeight: 1.5, cursor: 'pointer' }}>
-                                I have read and agree to the{' '}
-                                <a
-                                    href="/terms"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    style={{ color: 'var(--color-primary)', textDecoration: 'underline', fontWeight: 600 }}
-                                >
-                                    Terms of Service
-                                </a>
-                            </label>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                                <label style={{ fontSize: '0.9rem', color: 'var(--color-text-dark)', fontWeight: 600 }}>Password <span style={{ fontSize: '0.75rem', fontWeight: 400, color: 'var(--color-text-muted)' }}>(min 6 chars)</span></label>
+                                <div style={{ position: 'relative' }}>
+                                    <Lock size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-light)' }} />
+                                    <input
+                                        type="password"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        minLength={6}
+                                        className="tv-input"
+                                        placeholder="••••••••"
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.6rem', marginTop: '0.5rem' }}>
+                                <input
+                                    type="checkbox"
+                                    id="terms-checkbox"
+                                    checked={agreedToTerms}
+                                    onChange={(e) => setAgreedToTerms(e.target.checked)}
+                                    style={{ marginTop: '3px', accentColor: 'var(--tv-primary)', width: '16px', height: '16px', flexShrink: 0, cursor: 'pointer' }}
+                                />
+                                <label htmlFor="terms-checkbox" style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', lineHeight: 1.5, cursor: 'pointer' }}>
+                                    I have read and agree to the{' '}
+                                    <a href="/terms" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--tv-primary)', textDecoration: 'underline', fontWeight: 600 }}>
+                                        Terms of Service
+                                    </a>
+                                </label>
+                            </div>
+
+                            <button
+                                type="submit"
+                                className="btn-primary"
+                                disabled={!agreedToTerms || isLoading}
+                                style={{ 
+                                    marginTop: '0.5rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', width: '100%',
+                                    opacity: (!agreedToTerms || isLoading) ? 0.7 : 1, cursor: (!agreedToTerms || isLoading) ? 'not-allowed' : 'pointer' 
+                                }}
+                            >
+                                {isLoading ? (
+                                    <>
+                                        <div style={{ width: '18px', height: '18px', border: '2px solid rgba(255,255,255,0.3)', borderTop: '2px solid white', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                                        Creating Account...
+                                    </>
+                                ) : (
+                                    <>
+                                        <UserPlus size={18} /> Sign Up
+                                    </>
+                                )}
+                            </button>
+                        </form>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', margin: '0.5rem 0' }}>
+                            <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--color-border)' }}></div>
+                            <span style={{ fontSize: '0.8rem', color: 'var(--color-text-light)', fontWeight: 500 }}>OR</span>
+                            <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--color-border)' }}></div>
                         </div>
 
                         <button
-                            type="submit"
-                            className="btn-primary"
-                            disabled={!agreedToTerms || isLoading}
-                            style={{ 
-                                marginTop: '1rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', 
-                                opacity: (!agreedToTerms || isLoading) ? 0.7 : 1, cursor: (!agreedToTerms || isLoading) ? 'not-allowed' : 'pointer' 
+                            onClick={handleGoogleLogin}
+                            disabled={isLoading}
+                            style={{
+                                width: '100%', padding: '0.75rem', borderRadius: '8px',
+                                border: '1px solid var(--color-border-strong)', backgroundColor: 'white',
+                                color: 'var(--color-text-dark)', fontWeight: 600, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.75rem',
+                                opacity: isLoading ? 0.7 : 1, cursor: isLoading ? 'not-allowed' : 'pointer',
+                                transition: 'background-color 0.2s'
                             }}
+                            onMouseEnter={e => !isLoading && (e.currentTarget.style.backgroundColor = '#f8fafc')}
+                            onMouseLeave={e => !isLoading && (e.currentTarget.style.backgroundColor = 'white')}
                         >
-                            {isLoading ? (
-                                <>
-                                    <div className="spinner" style={{ width: '18px', height: '18px', border: '2px solid rgba(255,255,255,0.3)', borderTop: '2px solid white', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-                                    Creating Account...
-                                </>
-                            ) : (
-                                <>
-                                    <UserPlus size={18} /> Sign Up
-                                </>
-                            )}
+                            <img src="https://www.google.com/favicon.ico" alt="Google" style={{ width: '18px', height: '18px' }} />
+                            Continue with Google
                         </button>
-                    </form>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                        <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--color-border)' }}></div>
-                        <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>OR</span>
-                        <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--color-border)' }}></div>
+                        <p style={{ textAlign: 'center', fontSize: '0.9rem', marginTop: '0.5rem', color: 'var(--color-text-dark)' }}>
+                            Already have an account? <Link to="/login" style={{ color: 'var(--tv-primary)', textDecoration: 'none', fontWeight: 600 }}>Sign in</Link>
+                        </p>
                     </div>
-
-                    <button
-                        onClick={handleGoogleLogin}
-                        disabled={isLoading}
-                        style={{
-                            width: '100%', padding: '0.75rem', borderRadius: '8px',
-                            border: '1px solid var(--color-border)', backgroundColor: 'rgba(255,255,255,0.05)',
-                            color: 'white', fontWeight: 500, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.75rem',
-                            opacity: isLoading ? 0.7 : 1, cursor: isLoading ? 'not-allowed' : 'pointer'
-                        }}
-                    >
-                        {isLoading ? (
-                            <>
-                                <div className="spinner" style={{ width: '16px', height: '16px', border: '2px solid rgba(255,255,255,0.3)', borderTop: '2px solid white', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-                                Connecting...
-                            </>
-                        ) : (
-                            <>
-                                <img src="https://www.google.com/favicon.ico" alt="Google" style={{ width: '16px', height: '16px' }} />
-                                Continue with Google
-                            </>
-                        )}
-                    </button>
-
-                    <p style={{ textAlign: 'center', fontSize: '0.9rem', marginTop: '1rem' }}>
-                        Already have an account? <Link to="/login" style={{ color: 'var(--color-primary)', textDecoration: 'none', fontWeight: 600 }}>Sign in</Link>
-                    </p>
-                    <style>
-                        {`
-                        @keyframes spin {
-                            0% { transform: rotate(0deg); }
-                            100% { transform: rotate(360deg); }
-                        }
-                        `}
-                    </style>
                 </div>
             </div>
         </>
