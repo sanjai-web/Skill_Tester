@@ -1,10 +1,8 @@
-import 'regenerator-runtime/runtime';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Mic, MicOff, Video, VideoOff, Layout, SquareTerminal, X, Send, Loader, Play, ChevronDown } from 'lucide-react';
 import Editor from '@monaco-editor/react';
 import api from '../services/api';
-import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 
 // Language configs — canRun: true means the backend can execute this language
 const LANGUAGES = {
@@ -34,7 +32,6 @@ const ActiveInterview = () => {
     // ── State ──────────────────────────────────────────────────
     const { interviewId, firstQuestion, sections, hasTechJD, role = 'Software Engineer', company = '' } = location.state || {};
 
-    const [isMicOn, setIsMicOn] = useState(false);
     const [isCamOn, setIsCamOn] = useState(false);
     const [cameraError, setCameraError] = useState(null);
     const [showEditor, setShowEditor] = useState(false);
@@ -45,51 +42,102 @@ const ActiveInterview = () => {
     const [userInput, setUserInput] = useState('');
     const [transcript, setTranscript] = useState([]);
     const [currentQuestion, setCurrentQuestion] = useState(firstQuestion || '');
-    const [codingProblem, setCodingProblem] = useState(null); // active coding problem text
+    const [codingProblem, setCodingProblem] = useState(null);
 
     // Section tracking
     const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
     const [sectionQuestionCount, setSectionQuestionCount] = useState(1);
+    const [isAiSpeaking, setIsAiSpeaking] = useState(false);
+
     // --- Editor state ---
     const [selectedLang, setSelectedLang] = useState('whiteboard');
     const [codeOutput, setCodeOutput] = useState(null);
     const [isRunning, setIsRunning] = useState(false);
-    const recognitionRef = useRef(null);
+
+    // --- Native STT state ---
+    const [isListening, setIsListening] = useState(false);
+    const [liveTranscript, setLiveTranscript] = useState('');
+    const recognitionRef = useRef(null);   // SpeechRecognition instance
+    const shouldStopRef = useRef(false);   // true = user wants to stop, don't restart
+    const committedTextRef = useRef('');   // text confirmed before mic started
+
     const transcriptEndRef = useRef(null);
     const videoRef = useRef(null);
     const streamRef = useRef(null);
     const editorCodeRef = useRef(LANGUAGES.whiteboard.defaultCode);
-    const selectedVoiceRef = useRef(null); // female voice chosen once per session
+    const selectedVoiceRef = useRef(null);
 
-    // react-speech-recognition setup
-    const {
-        transcript: liveTranscript,
-        listening: isListening,
-        resetTranscript,
-        browserSupportsSpeechRecognition,
-        isMicrophoneAvailable
-    } = useSpeechRecognition();
+    // ── Native Web Speech API helpers ──────────────────────────────
+    const buildRecognition = useCallback(() => {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) return null;
 
-    // Debugging STT status
-    useEffect(() => {
-        console.log('[STT Debug] Browser Supports STT:', browserSupportsSpeechRecognition);
-        console.log('[STT Debug] Microphone Available:', isMicrophoneAvailable);
-        console.log('[STT Debug] Is Listening:', isListening);
-    }, [browserSupportsSpeechRecognition, isMicrophoneAvailable, isListening]);
+        const rec = new SpeechRecognition();
+        rec.continuous = true;
+        rec.interimResults = true;
+        rec.lang = 'en-US';
+        rec.maxAlternatives = 1;
 
-    // When mic stops, commit the spoken text to userInput so it stays for editing/submission
-    useEffect(() => {
-        if (!isListening && liveTranscript) {
-            setUserInput(prev => {
-                const prevTrimmed = prev.trim();
-                const newTranscript = liveTranscript.trim();
-                if (!prevTrimmed) return newTranscript;
-                if (!newTranscript) return prevTrimmed;
-                return prevTrimmed + ' ' + newTranscript;
-            });
-        }
-        setIsMicOn(isListening);
-    }, [isListening, liveTranscript]);
+        rec.onstart = () => {
+            console.log('[STT] Recognition started');
+            setIsListening(true);
+        };
+
+        rec.onresult = (event) => {
+            let interim = '';
+            let finalChunk = '';
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                const result = event.results[i];
+                if (result.isFinal) {
+                    finalChunk += result[0].transcript;
+                } else {
+                    interim += result[0].transcript;
+                }
+            }
+            // Accumulate final text into committedTextRef so restarts don't lose it
+            if (finalChunk) {
+                committedTextRef.current = (committedTextRef.current + ' ' + finalChunk).trim();
+            }
+            // Show live preview: committed + interim
+            const display = (committedTextRef.current + ' ' + interim).trim();
+            setLiveTranscript(display);
+        };
+
+        rec.onerror = (event) => {
+            console.warn('[STT] Error:', event.error);
+            if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+                shouldStopRef.current = true;
+                setIsListening(false);
+                alert('Microphone access denied. Please allow microphone access in your browser settings and try again.');
+            }
+            // For 'no-speech' / 'network' errors, let onend handle restart
+        };
+
+        rec.onend = () => {
+            console.log('[STT] Recognition ended. shouldStop:', shouldStopRef.current);
+            if (!shouldStopRef.current) {
+                // Browser stopped on its own (Chrome 60s limit, no-speech, etc.) — restart
+                console.log('[STT] Auto-restarting...');
+                try { rec.start(); } catch (e) { console.warn('[STT] Restart failed:', e); }
+            } else {
+                // User intentionally stopped
+                setIsListening(false);
+                // Flush committed text into userInput
+                const finalText = committedTextRef.current.trim();
+                if (finalText) {
+                    setUserInput(prev => {
+                        const base = prev.trim();
+                        return base ? base + ' ' + finalText : finalText;
+                    });
+                }
+                committedTextRef.current = '';
+                setLiveTranscript('');
+            }
+        };
+
+        return rec;
+    }, []);
+
 
 
     // --- Timer ---
@@ -267,6 +315,11 @@ const ActiveInterview = () => {
         if (selectedVoiceRef.current) utterance.voice = selectedVoiceRef.current;
         utterance.rate = 0.95;
         utterance.pitch = 1.1;  // slightly higher pitch for female voice
+        
+        utterance.onstart = () => setIsAiSpeaking(true);
+        utterance.onend = () => setIsAiSpeaking(false);
+        utterance.onerror = () => setIsAiSpeaking(false);
+
         window.speechSynthesis.speak(utterance);
     };
 
@@ -280,42 +333,82 @@ const ActiveInterview = () => {
         }
     }, []);
 
-    // --- Speech-to-Text toggle ---
-    const toggleListening = async () => {
-        console.log('[STT Debug] Toggle Listening Clicked');
-        if (!browserSupportsSpeechRecognition) {
-            alert('Speech recognition is not supported in your browser. Try Chrome or Edge.');
+    // --- Speech-to-Text toggle (native Web Speech API) ---
+    const toggleListening = useCallback(async () => {
+        const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognitionAPI) {
+            alert('Speech recognition is not supported in your browser. Please use Chrome or Edge.');
             return;
         }
 
         if (isListening) {
-            console.log('[STT Debug] Stopping listen...');
-            SpeechRecognition.stopListening();
+            // ── STOP ──────────────────────────────────────────────
+            console.log('[STT] User requested STOP');
+            shouldStopRef.current = true;
+            if (recognitionRef.current) {
+                try {
+                    recognitionRef.current.stop(); // graceful — fires onend
+                } catch (e) {
+                    console.warn('[STT] stop() failed, aborting:', e);
+                    try { recognitionRef.current.abort(); } catch (_) {}
+                    // Manually trigger the stopped state if stop/abort both fail
+                    setIsListening(false);
+                    const finalText = committedTextRef.current.trim();
+                    if (finalText) {
+                        setUserInput(prev => (prev.trim() ? prev.trim() + ' ' + finalText : finalText));
+                    }
+                    committedTextRef.current = '';
+                    setLiveTranscript('');
+                }
+            }
         } else {
-            console.log('[STT Debug] Calling SpeechRecognition.startListening()...');
+            // ── START ─────────────────────────────────────────────
+            console.log('[STT] User requested START');
 
-            // Explicitly request permission to ensure the browser doesn't block it silently
+            // Request mic permission explicitly first
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                // We MUST release the track immediately so SpeechRecognition can use the hardware!
-                stream.getTracks().forEach(track => track.stop());
+                stream.getTracks().forEach(track => track.stop()); // release immediately
             } catch (err) {
-                console.error('[STT Debug] Mic Access Denied:', err);
-                alert('Microphone access denied. Please click the 🔒 icon in your browser address bar and allow microphone access, then try again.');
+                console.error('[STT] Mic permission denied:', err);
+                alert('Microphone access denied. Click the 🔒 icon in your browser address bar, allow microphone access, then try again.');
                 return;
             }
 
-            // clear out the old transcript from the library so it starts fresh
-            resetTranscript();
+            // Tear down any stale instance
+            if (recognitionRef.current) {
+                try { recognitionRef.current.abort(); } catch (_) {}
+                recognitionRef.current = null;
+            }
+
+            // Preserve whatever the user already typed — new speech appends to it
+            committedTextRef.current = '';
+            setLiveTranscript('');
+            shouldStopRef.current = false;
+
+            const rec = buildRecognition();
+            if (!rec) return;
+            recognitionRef.current = rec;
 
             try {
-                // start listening with the library wrapper but without strict en-US so it handles regional accents
-                await SpeechRecognition.startListening({ continuous: true });
+                rec.start();
             } catch (err) {
-                console.error('[STT Debug] startListening failed:', err);
+                console.error('[STT] start() failed:', err);
+                alert('Could not start speech recognition. Please try again.');
             }
         }
-    };
+    }, [isListening, buildRecognition]);
+
+    // Cleanup on unmount
+    useEffect(() => {
+        return () => {
+            if (recognitionRef.current) {
+                shouldStopRef.current = true;
+                try { recognitionRef.current.abort(); } catch (_) {}
+            }
+        };
+    }, []);
+
 
     // --- Submit Answer to Backend ---
     const submitAnswer = async (directText) => {
@@ -329,8 +422,15 @@ const ActiveInterview = () => {
         setTranscript(updatedTranscript);
         setUserInput('');
         setIsLoading(true);
-        SpeechRecognition.stopListening();
-        resetTranscript();
+
+        // Stop mic if it's running
+        if (recognitionRef.current && isListening) {
+            shouldStopRef.current = true;
+            try { recognitionRef.current.stop(); } catch (_) {}
+        }
+        committedTextRef.current = '';
+        setLiveTranscript('');
+        setIsListening(false);
 
         try {
             const response = await api.post('/interviews/next', {
@@ -381,6 +481,7 @@ const ActiveInterview = () => {
     const endInterview = async () => {
         if (isFinishing) return;
         window.speechSynthesis.cancel();
+        setIsAiSpeaking(false);
 
         if (!interviewId) {
             navigate('/dashboard');
@@ -565,7 +666,7 @@ const ActiveInterview = () => {
                         <div style={{ display: 'flex', flex: 1, gap: '1rem' }}>
                             {/* Interviewer */}
                             <div className="glass-card" style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', position: 'relative', backgroundColor: '#1e293b' }}>
-                                <div style={{ width: '120px', height: '120px', borderRadius: '50%', backgroundColor: 'rgba(59, 130, 246, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', border: '3px solid var(--color-primary)' }}>
+                                <div className={isAiSpeaking ? 'ai-speaking' : ''} style={{ width: '120px', height: '120px', borderRadius: '50%', backgroundColor: 'rgba(59, 130, 246, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', border: '3px solid var(--color-primary)' }}>
                                     <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Olivia&backgroundColor=b6e3f4" alt="Interviewer" style={{ width: '100%', height: '100%' }} />
                                 </div>
                                 <div style={{ position: 'absolute', bottom: '1rem', left: '1rem', backgroundColor: 'rgba(0,0,0,0.5)', padding: '0.25rem 0.75rem', borderRadius: '4px', fontSize: '0.9rem' }}>Olivia (AI)</div>
@@ -658,7 +759,7 @@ const ActiveInterview = () => {
                             />
                         </div>
                         <button onClick={() => submitAnswer(isListening ? liveTranscript : undefined)} disabled={!(isListening ? liveTranscript : userInput).trim() || isLoading}
-                            style={{ padding: '0.75rem', borderRadius: '8px', backgroundColor: 'var(--color-primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: (!userInput.trim() || isLoading) ? 0.5 : 1 }}>
+                            style={{ padding: '0.75rem', borderRadius: '8px', backgroundColor: 'var(--color-primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: (!(isListening ? liveTranscript : userInput).trim() || isLoading) ? 0.5 : 1 }}>
                             {isLoading ? <Loader size={20} style={{ animation: 'spin 1s linear infinite' }} /> : <Send size={20} />}
                         </button>
                     </div>
