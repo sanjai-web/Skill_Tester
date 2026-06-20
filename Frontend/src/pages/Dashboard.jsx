@@ -14,7 +14,7 @@ const Dashboard = () => {
     const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
     const handleStartInterview = () => {
-        if ((subscription?.interviews_remaining ?? 1) <= 0) {
+        if ((subscription?.interviews_remaining ?? 4) <= 0) {
             setShowUpgradeModal(true);
         } else {
             navigate('/setup');
@@ -189,7 +189,7 @@ const Dashboard = () => {
 
                             {(() => {
                                 const plans = [
-                                    { id: 'free', label: 'Free', price: 0, interviews: 1, features: ['1 AI mock interview', 'Basic text feedback', 'Adaptive questions'] },
+                                    { id: 'free', label: 'Free', price: 0, interviews: 4, features: ['4 AI mock interviews', 'Basic text feedback', 'Adaptive questions'] },
                                     { id: 'basic', label: 'Basic', price: 89, interviews: 3, features: ['3 AI mock interviews', 'Detailed performance report', 'Voice mode'] },
                                     { id: 'intermediate', label: 'Intermediate', price: 250, interviews: 10, features: ['10 AI mock interviews', 'Advanced technical questions', 'Code editor', 'Analytics'], recommended: true },
                                     { id: 'pro', label: 'Pro', price: 479, interviews: 23, features: ['23 AI mock interviews', 'Priority AI generation', 'Unlimited resume uploads', 'Priority email support'] },

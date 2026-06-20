@@ -132,7 +132,7 @@ exports.getUserSubscription = async (req, res, next) => {
         if (!doc.exists) {
             return res.status(200).json({
                 status: 'success',
-                data: { plan_id: 'free', interviews_remaining: 1, subscription_status: 'active' }
+                data: { plan_id: 'free', interviews_remaining: 4, subscription_status: 'active' }
             });
         }
         const { plan_id, interviews_remaining, subscription_status } = doc.data();
@@ -174,7 +174,7 @@ exports.initializeInterview = async (req, res, next) => {
         // Check remaining interview quota BEFORE doing anything else
         const userDoc = await db.collection('users').doc(req.user.id).get();
         const userData = userDoc.exists ? userDoc.data() : {};
-        const remaining = userData.interviews_remaining ?? 1; // default 1 for brand-new users
+        const remaining = userData.interviews_remaining ?? 4; // default 4 for brand-new users
         if (remaining <= 0) {
             return res.status(403).json({
                 status: 'error',

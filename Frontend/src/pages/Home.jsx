@@ -314,7 +314,7 @@ const LandingPage = () => {
                         <PricingCard
                             title="Free Tier"
                             price="0"
-                            features={["1 AI mock interview", "Basic text feedback", "Adaptive questions"]}
+                            features={["4 AI mock interviews", "Basic text feedback", "Adaptive questions"]}
                             buttonText="Start Free"
                             onUpgrade={() => navigate('/login')}
                         />

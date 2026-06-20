@@ -62,7 +62,7 @@ exports.googleLogin = async (req, res) => {
                 email,
                 name,
                 plan_id: 'free',
-                interviews_remaining: 1,
+                interviews_remaining: 4,
                 subscription_status: 'active',
                 created_at: new Date().toISOString(),
                 auth_provider: 'google'
