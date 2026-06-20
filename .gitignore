@@ -5,7 +5,7 @@
 # ── Secrets & Credentials ─────────────────
 .env
 .env.*
-!.env.example
+!.env.example*
 *.json.bak
 
 # Firebase service account keys (CRITICAL — never commit these!)
