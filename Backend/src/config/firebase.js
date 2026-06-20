@@ -14,8 +14,10 @@ if (projectId && clientEmail && privateKey) {
         if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
             privateKey = privateKey.slice(1, -1);
         }
-        // Replace all backslashes with newlines to repair typos like \a instead of \n
-        privateKey = privateKey.replace(/\\/g, '\n');
+        // Replace literal \n with actual newlines
+        privateKey = privateKey.replace(/\\n/g, '\n');
+        // Handle typos where a backslash is followed by another character (e.g., \a instead of \na)
+        privateKey = privateKey.replace(/\\(.)/g, '\n$1');
         const lines = privateKey.split('\n').map(l => l.trim()).filter(Boolean);
         privateKey = lines.join('\n');
 
