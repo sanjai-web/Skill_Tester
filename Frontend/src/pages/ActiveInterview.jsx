@@ -1180,8 +1180,8 @@ const ActiveInterview = () => {
                 )}
                 <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem' }}>
                     <button onClick={toggleListening} disabled={modelLoading} title={modelLoading ? `Loading speech model: ${modelProgress}%` : (isListening ? 'Stop listening' : 'Start voice input')}
-                        style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: modelLoading ? 'rgba(255,255,255,0.05)' : (isListening ? '#dc2626' : 'rgba(255,255,255,0.1)'), display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', boxShadow: isListening ? '0 0 0 3px rgba(220,38,38,0.3)' : 'none', transition: 'all 0.2s', cursor: modelLoading ? 'not-allowed' : 'pointer' }}>
-                        {isListening ? <MicOff size={20} /> : <Mic size={20} />}
+                        style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: modelLoading ? 'rgba(255,255,255,0.05)' : (isListening ? '#22c55e' : '#dc2626'), display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', boxShadow: isListening ? '0 0 0 3px rgba(34,197,94,0.3)' : 'none', transition: 'all 0.2s', cursor: modelLoading ? 'not-allowed' : 'pointer' }}>
+                        {isListening ? <Mic size={20} /> : <MicOff size={20} />}
                     </button>
                     <button onClick={toggleCamera} title={isCamOn ? 'Turn off camera' : 'Turn on camera'}
                         style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: isCamOn ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', border: isCamOn ? '2px solid rgba(255,255,255,0.3)' : 'none' }}>
