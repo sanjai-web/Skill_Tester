@@ -38,8 +38,14 @@ const Signup = () => {
 
         setIsLoading(false);
         if (result.success) {
-            setIsSuccess(true);
-            setNeedsEmailConfirmation(result.emailConfirmationRequired || false);
+            const isEmailConfRequired = result.emailConfirmationRequired || false;
+            if (isEmailConfRequired) {
+                setIsSuccess(true);
+                setNeedsEmailConfirmation(true);
+            } else {
+                // Auto login succeeded, go straight to dashboard
+                navigate('/dashboard');
+            }
         } else {
             setError(result.message);
         }

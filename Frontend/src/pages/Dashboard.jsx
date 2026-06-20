@@ -285,8 +285,8 @@ const Dashboard = () => {
                                                     <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
                                                         {interview.status === 'completed' ? 'Score' : 'Status'}
                                                     </p>
-                                                    {interview.status === 'completed' && interview.score ? (
-                                                        <span style={{ fontSize: '1.2rem', fontWeight: 700, color: interview.score > 70 ? 'var(--color-success)' : 'var(--color-warning)' }}>
+                                                    {interview.status === 'completed' && typeof interview.score === 'number' ? (
+                                                        <span style={{ fontSize: '1.2rem', fontWeight: 700, color: interview.score >= 70 ? 'var(--color-success)' : 'var(--color-warning)' }}>
                                                             {interview.score}%
                                                         </span>
                                                     ) : (

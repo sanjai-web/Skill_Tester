@@ -32,6 +32,7 @@ app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/interviews', require('./routes/interviewRoutes'));
 app.use('/api/payments', require('./routes/paymentRoutes'));
 app.use('/api/code', require('./routes/codeRoutes'));
+app.use('/api/stt', require('./routes/sttRoutes'));
 
 // Global Error Handler — always returns JSON, never HTML
 app.use((err, req, res, next) => {

@@ -222,7 +222,7 @@ const InterviewSetup = () => {
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    <label style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)', fontWeight: 500 }}>Upload Resume (PDF) *</label>
+                    <label style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)', fontWeight: 500 }}>Upload Resume (PDF) <span style={{ fontWeight: 400, fontSize: '0.82rem' }}>(Optional — improves question relevance)</span></label>
 
                     <label style={{
                         border: `2px dashed ${parseSuccess ? 'var(--color-success)' : 'var(--color-border)'}`,
@@ -261,7 +261,7 @@ const InterviewSetup = () => {
                                     <p style={{ margin: '0 0 0.5rem 0', fontWeight: 600, color: 'var(--color-text-main)' }}>
                                         Click to upload or drag and drop
                                     </p>
-                                    <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>PDF only (Max 5MB)</p>
+                                    <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>PDF only (Max 5MB) — skip if you don't have one ready</p>
                                 </div>
                             </>
                         )}
@@ -276,8 +276,8 @@ const InterviewSetup = () => {
                     <button
                         type="submit"
                         className="btn-primary"
-                        disabled={isLoading || isParsing || !parseSuccess}
-                        style={{ padding: '0.75rem 2.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', opacity: (isLoading || isParsing || !parseSuccess) ? 0.6 : 1 }}>
+                        disabled={isLoading || isParsing}
+                        style={{ padding: '0.75rem 2.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', opacity: (isLoading || isParsing) ? 0.6 : 1 }}>
                         {isLoading ? (
                             <><Loader size={18} style={{ animation: 'spin 1s linear infinite' }} /> Generating Questions...</>
                         ) : 'Continue to Interview ➜'}

@@ -10,9 +10,10 @@ const apiLimiter = rateLimit({
 });
 
 // Stricter Rate Limiter for AI Endpoints (prevent abuse)
+// A single full interview requires ~32 API calls; 100 allows ~3 full interviews/hr per IP
 const aiLimiter = rateLimit({
     windowMs: 60 * 60 * 1000, // 1 hour
-    max: 20, // Limit each IP to 20 AI requests per hour
+    max: 100, // Raised from 20 → 100 to allow completing full interviews without hitting limit
     standardHeaders: true,
     legacyHeaders: false,
     message: { status: 'error', message: 'AI request limit reached, please try again later.' }

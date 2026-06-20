@@ -2,6 +2,111 @@ const { db } = require('../config/firebase');
 const aiService = require('../services/aiService');
 const pdfService = require('../services/pdfService');
 const admin = require('firebase-admin');
+const Groq = require('groq-sdk');
+
+// ─── Evaluation Report Generator ─────────────────────────────────────────────
+// Computes section scores locally (deterministic), then asks Groq only for
+// natural-language narrative (no number hallucination risk).
+async function generateEvaluationReport({ role, company, questions, finalScore }) {
+    const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+
+    const SECTION_LABELS = {
+        self_intro: 'Self Introduction', projects: 'Projects', experience: 'Experience',
+        technical: 'Technical Skills', scenario: 'Scenario-Based',
+        industry: 'Industry Knowledge', soft_skills: 'Soft Skills',
+    };
+
+    // Group by section and compute averages locally
+    const sectionMap = {};
+    questions.forEach(q => {
+        const sec = q.section;
+        if (!sec || sec === 'closing') return;
+        if (!sectionMap[sec]) sectionMap[sec] = { questions: [], scores: [] };
+        sectionMap[sec].questions.push(q);
+        if (typeof q.score === 'number') sectionMap[sec].scores.push(q.score);
+    });
+
+    const SECTION_ORDER = ['self_intro', 'projects', 'experience', 'technical', 'scenario', 'industry', 'soft_skills'];
+    const sectionData = SECTION_ORDER
+        .filter(sec => sectionMap[sec])
+        .map(sec => {
+            const d = sectionMap[sec];
+            const avg = d.scores.length > 0
+                ? Math.round((d.scores.reduce((a, b) => a + b, 0) / d.scores.length) * 10)
+                : 0;
+            return { sectionKey: sec, label: SECTION_LABELS[sec] || sec, score: avg, questionCount: d.questions.length };
+        });
+
+    // Build Q&A digest — limit to 20 Qs, truncate long answers
+    const answeredQs = questions
+        .filter(q => q.question_text && q.user_answer && q.section !== 'closing')
+        .slice(0, 20);
+
+    const qaSummary = answeredQs.map((q, i) =>
+        `Q${i + 1} [${SECTION_LABELS[q.section] || q.section}] Score:${q.score}/10\n` +
+        `Q: ${q.question_text.substring(0, 160)}\n` +
+        `A: ${(q.user_answer || '').substring(0, 220)}`
+    ).join('\n\n');
+
+    const sectionSummaryForPrompt = sectionData
+        .map(s => `${s.label}: ${s.score}/100 (${s.questionCount} questions)`)
+        .join('\n');
+
+    const prompt =
+`You are a senior technical interviewer writing a post-interview evaluation for a ${role}${company ? ` position at ${company}` : ''} candidate.
+
+OVERALL SCORE: ${finalScore}/100
+
+SECTION SCORES (already computed — do NOT change these numbers):
+${sectionSummaryForPrompt}
+
+Q&A TRANSCRIPT SAMPLE:
+${qaSummary}
+
+Write a professional evaluation. Return ONLY valid JSON (no markdown, no code fences):
+{
+  "overallSummary": "3-4 sentences assessing the candidate honestly and constructively. Reference specific content from their answers.",
+  "sectionSummaries": {
+    ${sectionData.map(s => `"${s.sectionKey}": "One specific sentence about their ${s.label} performance"`).join(',\n    ')}
+  },
+  "skillAssessment": [
+    { "skill": "SkillName", "level": "Beginner|Intermediate|Advanced|Expert", "note": "Brief evidence-based note" }
+  ],
+  "strengths": [
+    "Specific strength with evidence from their actual answers"
+  ],
+  "improvements": [
+    "Specific, actionable improvement recommendation"
+  ],
+  "hiringRecommendation": "Strong Yes|Yes|Maybe|No",
+  "interviewerNote": "One candid sentence a real interviewer would note"
+}`;
+
+    const result = await groq.chat.completions.create({
+        model: process.env.AI_MODEL || 'llama-3.3-70b-versatile',
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.35,
+        max_tokens: 1500,
+    });
+
+    const text = (result.choices[0]?.message?.content || '').trim();
+    let cleaned = text.replace(/```json/gi, '').replace(/```/g, '').trim();
+    const start = cleaned.indexOf('{');
+    const end = cleaned.lastIndexOf('}');
+    if (start === -1 || end === -1) throw new Error('No JSON in report response');
+    const parsed = JSON.parse(cleaned.substring(start, end + 1));
+
+    // Merge pre-computed section scores with AI summaries
+    parsed.sectionScores = sectionData.map(s => ({
+        section: s.label,
+        score: s.score,
+        questionCount: s.questionCount,
+        summary: parsed.sectionSummaries?.[s.sectionKey] || '',
+    }));
+    delete parsed.sectionSummaries;
+
+    return parsed;
+}
 
 // GET /api/interviews
 exports.getUserInterviews = async (req, res, next) => {
@@ -90,7 +195,7 @@ exports.initializeInterview = async (req, res, next) => {
         }
 
         // Detect tech JD for coding problem feature
-        const hasTechJD = aiService.isTechJD(description);
+        const hasTechJD = aiService.isTechJD(description) && aiService.isCodingRole(role);
 
         // Generate the opening Self-Introduction question
         const firstQuestion = await aiService.generateFirstQuestion(company, role, description, resumeText);
@@ -101,6 +206,7 @@ exports.initializeInterview = async (req, res, next) => {
             company: company || '',
             role,
             job_description: description,
+            resume_text: resumeText || '', // Saved for RAG retrieval
             status: 'in_progress',
             score: null,
             has_tech_jd: hasTechJD,
@@ -149,6 +255,7 @@ exports.evaluateAnswer = async (req, res, next) => {
 
         // Evaluate via AI — decide follow-up or advance section
         const evaluation = await aiService.evaluateAndContinue({
+            interviewId,
             role: role || 'Software Engineer',
             company: company || '',
             section: sectionId,
@@ -187,6 +294,7 @@ exports.evaluateAnswer = async (req, res, next) => {
                 isCodingProblem: evaluation.isCodingProblem,
                 score: evaluation.score,
                 feedback: evaluation.feedback,
+                isAnswerRelevant: evaluation.isAnswerRelevant,
             }
         });
     } catch (error) {
@@ -250,39 +358,68 @@ exports.finishInterview = async (req, res, next) => {
     try {
         const { id } = req.params;
 
+        // Auth check first
+        const interviewRef = db.collection('interviews').doc(id);
+        const interviewDoc = await interviewRef.get();
+        if (!interviewDoc.exists || interviewDoc.data().user_id !== req.user.id) {
+            return res.status(404).json({ status: 'error', message: 'Interview not found.' });
+        }
+        const interviewData = interviewDoc.data();
+
+        // Fetch all Q&A
         const questionsSnap = await db.collection('interviews').doc(id)
             .collection('questions').get();
 
-        // Score all non-closing sections
         let totalScore = 0;
         let answeredCount = 0;
+        const questions = [];
 
         questionsSnap.docs.forEach(doc => {
-            const { score, section } = doc.data();
+            const data = { id: doc.id, ...doc.data() };
+            questions.push(data);
+            const { score, section } = data;
             if (section !== 'closing' && score != null) {
                 totalScore += Number(score);
                 answeredCount++;
             }
         });
 
+        questions.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+
         // The expected total questions if the user completes all sections
         const expectedTotalQuestions = aiService.SECTIONS
             .filter(s => s.id !== 'closing' && s.id !== 'self_intro')
             .reduce((sum, s) => sum + s.maxQ, 1); // +1 for self_intro
 
-        // Use the larger of answeredCount or expectedTotalQuestions to penalize early exits
         const denominator = Math.max(answeredCount, expectedTotalQuestions);
         const finalScore = denominator > 0 ? Math.round((totalScore / denominator) * 10) : 0;
 
-        const interviewRef = db.collection('interviews').doc(id);
-        const interviewDoc = await interviewRef.get();
-        if (!interviewDoc.exists || interviewDoc.data().user_id !== req.user.id) {
-            return res.status(404).json({ status: 'error', message: 'Interview not found.' });
+        // ── Generate AI evaluation report ──────────────────────────────────────
+        // Non-fatal: if Groq fails, interview still closes with just the numeric score.
+        let evaluationReport = null;
+        try {
+            evaluationReport = await generateEvaluationReport({
+                role: interviewData.role || 'Software Engineer',
+                company: interviewData.company || '',
+                questions,
+                finalScore,
+            });
+            console.log(`[finishInterview] ✅ Evaluation report generated for interview ${id}`);
+        } catch (reportErr) {
+            console.error('[finishInterview] Report generation failed (non-fatal):', reportErr.message);
         }
 
-        await interviewRef.update({ status: 'completed', score: finalScore });
+        // Save to Firestore
+        await interviewRef.update({
+            status: 'completed',
+            score: finalScore,
+            ...(evaluationReport && { evaluation_report: evaluationReport }),
+        });
 
-        res.status(200).json({ status: 'success', data: { interviewId: id, score: finalScore } });
+        res.status(200).json({
+            status: 'success',
+            data: { interviewId: id, score: finalScore, report: evaluationReport },
+        });
     } catch (error) {
         console.error('finishInterview Error:', error.message);
         next(error);

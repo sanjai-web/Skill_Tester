@@ -45,30 +45,36 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     const login = async (email, password) => {
+        // Step 1: Firebase Auth — hard failure (wrong password, user not found, etc.)
+        let userCredential;
         try {
-            const userCredential = await signInWithEmailAndPassword(auth, email, password);
-            const idToken = await userCredential.user.getIdToken();
-            setToken(idToken);
+            userCredential = await signInWithEmailAndPassword(auth, email, password);
+        } catch (error) {
+            return { success: false, message: getFirebaseErrorMessage(error.code) };
+        }
 
-            // Fetch Firestore profile
+        // Step 2: Get ID token
+        const idToken = await userCredential.user.getIdToken();
+        setToken(idToken);
+
+        // Step 3: Fetch Firestore profile — soft failure (backend down = use Firebase fallback)
+        try {
             const res = await api.get('/auth/me', {
                 headers: { Authorization: `Bearer ${idToken}` }
             });
             setUser(res.data.data);
-
-            return { success: true };
-        } catch (error) {
-            const msg = getFirebaseErrorMessage(error.code);
-            return { success: false, message: msg };
+        } catch {
+            // Backend unreachable — fall back to Firebase user data, same as onAuthStateChanged
+            const fb = userCredential.user;
+            setUser({ id: fb.uid, email: fb.email, name: fb.displayName || 'User' });
         }
+
+        return { success: true };
     };
 
     const register = async (name, email, password) => {
         try {
-            // 1. Call backend to create user in Firebase Auth + Firestore
             await api.post('/auth/register', { name, email, password });
-
-            // 2. Sign in immediately after registration
             const result = await login(email, password);
             return result;
         } catch (error) {
@@ -77,32 +83,42 @@ export const AuthProvider = ({ children }) => {
     };
 
     const loginWithGoogle = async () => {
+        // Step 1: Firebase Google popup — hard failure
+        let result;
         try {
             const provider = new GoogleAuthProvider();
-            const result = await signInWithPopup(auth, provider);
-            const firebaseUser = result.user;
-            const idToken = await firebaseUser.getIdToken();
-            setToken(idToken);
+            result = await signInWithPopup(auth, provider);
+        } catch (error) {
+            console.error('Google Login Error:', error);
+            return { success: false, message: getFirebaseErrorMessage(error.code) };
+        }
 
-            // Sync with backend (creates Firestore doc if missing)
+        const firebaseUser = result.user;
+        const idToken = await firebaseUser.getIdToken();
+        setToken(idToken);
+
+        // Step 2: Sync with backend — soft failure
+        try {
             await api.post('/auth/google', {
                 uid: firebaseUser.uid,
                 email: firebaseUser.email,
                 name: firebaseUser.displayName || 'Google User'
-            });
+            }, { headers: { Authorization: `Bearer ${idToken}` } });
+        } catch (err) {
+            console.warn('Backend Google sync failed (non-fatal):', err.message);
+        }
 
-            // Fetch final Firestore profile
+        // Step 3: Fetch Firestore profile — soft failure
+        try {
             const res = await api.get('/auth/me', {
                 headers: { Authorization: `Bearer ${idToken}` }
             });
             setUser(res.data.data);
-
-            return { success: true };
-        } catch (error) {
-            console.error('Google Login Error:', error);
-            const msg = getFirebaseErrorMessage(error.code);
-            return { success: false, message: msg };
+        } catch {
+            setUser({ id: firebaseUser.uid, email: firebaseUser.email, name: firebaseUser.displayName || 'User' });
         }
+
+        return { success: true };
     };
 
     const logout = async () => {
