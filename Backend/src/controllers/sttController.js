@@ -1,7 +1,5 @@
-const Groq = require('groq-sdk');
+const groq = require('../services/groqClient');
 const { toFile } = require('groq-sdk');
-
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 /**
  * POST /api/stt/transcribe

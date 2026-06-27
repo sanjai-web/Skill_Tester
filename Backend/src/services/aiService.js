@@ -15,7 +15,6 @@
  *   - Adaptive difficulty via candidate memory
  */
 
-const Groq = require('groq-sdk');
 require('dotenv').config();
 const ragService = require('./ragService');
 const retrievalService = require('./retrievalService');
@@ -37,7 +36,7 @@ async function getSkillsForInterview(interviewId) {
     return [];
 }
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+const groq = require('./groqClient');
 const AI_MODEL = process.env.AI_MODEL || 'llama-3.3-70b-versatile';
 
 // ─────────────────────────────────────────────

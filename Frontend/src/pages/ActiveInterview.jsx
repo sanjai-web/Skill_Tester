@@ -129,6 +129,7 @@ const ActiveInterview = () => {
     } = stateSource;
 
     const [isCamOn, setIsCamOn] = useState(false);
+    const [isStarted, setIsStarted] = useState(false);
     const [cameraError, setCameraError] = useState(null);
     const [showEditor, setShowEditor] = useState(false);
     const [showTranscript, setShowTranscript] = useState(true);
@@ -189,6 +190,7 @@ const ActiveInterview = () => {
 
     const transcriptEndRef = useRef(null);
     const videoRef = useRef(null);
+    const setupVideoRef = useRef(null);
     const streamRef = useRef(null);
     const editorCodeRef = useRef(LANGUAGES.whiteboard.defaultCode);
     const selectedVoiceRef = useRef(null);
@@ -547,9 +549,10 @@ const ActiveInterview = () => {
 
     // ── Timer ──────────────────────────────────────────────────
     useEffect(() => {
+        if (!isStarted) return;
         const interval = setInterval(() => setTimer(prev => prev + 1), 1000);
         return () => clearInterval(interval);
-    }, []);
+    }, [isStarted]);
 
     // ── Camera cleanup ─────────────────────────────────────────
     useEffect(() => {
@@ -574,12 +577,17 @@ const ActiveInterview = () => {
         if (isCamOn) {
             if (streamRef.current) { streamRef.current.getTracks().forEach(t => t.stop()); streamRef.current = null; }
             if (videoRef.current) videoRef.current.srcObject = null;
+            if (setupVideoRef.current) setupVideoRef.current.srcObject = null;
             setIsCamOn(false);
         } else {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
                 streamRef.current = stream;
-                if (videoRef.current) { videoRef.current.srcObject = stream; videoRef.current.play(); }
+                const targetVideo = isStarted ? videoRef.current : setupVideoRef.current;
+                if (targetVideo) {
+                    targetVideo.srcObject = stream;
+                    targetVideo.play().catch(e => console.log("video play error:", e));
+                }
                 setIsCamOn(true);
             } catch (err) {
                 setCameraError(err.name === 'NotAllowedError'
@@ -736,12 +744,35 @@ const ActiveInterview = () => {
         }
     }, [interviewId, currentSectionIndex, sectionQuestionCount, currentQuestion]);
 
+    const handleStartInterview = () => {
+        if (!isCamOn || !streamRef.current) {
+            alert("Please turn on your camera before starting the interview.");
+            return;
+        }
+
+        setIsStarted(true);
+
+        // Bind the active stream to the main video element
+        setTimeout(() => {
+            if (streamRef.current && videoRef.current) {
+                videoRef.current.srcObject = streamRef.current;
+                videoRef.current.play().catch(e => console.log("video play error:", e));
+            }
+        }, 100);
+
+        // Speak and load the question
+        if (location.state && firstQuestion && transcript.length === 0) {
+            setTranscript([{ from: 'ai', text: firstQuestion }]);
+            speak(firstQuestion);
+        } else if (currentQuestion) {
+            speak(currentQuestion);
+        }
+    };
+
     useEffect(() => {
         const initOrRestore = async () => {
             if (location.state && firstQuestion) {
-                // Fresh start
-                setTranscript([{ from: 'ai', text: firstQuestion }]);
-                speak(firstQuestion);
+                // Fresh start (will be initialized in handleStartInterview)
             } else if (interviewId) {
                 // Restoring from a page refresh!
                 setIsLoading(true);
@@ -852,6 +883,62 @@ const ActiveInterview = () => {
     const displayText = isListening
         ? (userInput.trim() ? userInput.trim() + ' ' + liveTranscript : liveTranscript)
         : userInput;
+
+    if (!isStarted) {
+        return (
+            <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#0f172a', color: 'white', alignItems: 'center', justifyContent: 'center', padding: '2rem', fontFamily: 'inherit' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', position: 'absolute', top: '2rem', left: '2rem' }}>
+                    <h1 style={{ fontSize: '1.25rem', margin: 0, fontWeight: 700, color: 'var(--color-primary, #3b82f6)' }}>Skilltester.app</h1>
+                </div>
+
+                <div className="glass-card" style={{ maxWidth: '540px', width: '100%', padding: '2.5rem 2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', backgroundColor: '#1e293b', borderRadius: '16px', border: '1px solid rgba(255, 255, 255, 0.08)', boxShadow: '0 10px 25px rgba(0, 0, 0, 0.3)' }}>
+                    <h2 style={{ fontSize: '1.5rem', fontWeight: 700, margin: '0 0 0.5rem 0', textAlign: 'center' }}>
+                        Camera Setup Verification
+                    </h2>
+                    <p style={{ margin: '0 0 2rem 0', fontSize: '0.9rem', color: '#94a3b8', textAlign: 'center', lineHeight: 1.5 }}>
+                        Before starting the interview, please verify that your camera is working correctly. Adjust your lighting and position yourself centered in the frame.
+                    </p>
+
+                    {/* Camera Preview Box */}
+                    <div style={{ position: 'relative', width: '100%', aspectRatio: '16/10', borderRadius: '12px', backgroundColor: '#0f172a', border: '1px solid rgba(255, 255, 255, 0.1)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '2rem' }}>
+                        <video ref={setupVideoRef} autoPlay muted playsInline style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: isCamOn ? 'block' : 'none', transform: 'scaleX(-1)' }} />
+
+                        {!isCamOn && (
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', zIndex: 1 }}>
+                                <div style={{ width: '80px', height: '80px', borderRadius: '50%', backgroundColor: 'rgba(239, 68, 68, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
+                                    <VideoOff size={32} style={{ color: '#ef4444' }} />
+                                </div>
+                                {cameraError ? (
+                                    <p style={{ margin: 0, fontSize: '0.8rem', color: '#fca5a5', textAlign: 'center', maxWidth: '280px', padding: '0 1rem', lineHeight: 1.4 }}>
+                                        {cameraError}
+                                    </p>
+                                ) : (
+                                    <p style={{ margin: 0, fontSize: '0.85rem', color: '#94a3b8' }}>Camera is currently disabled</p>
+                                )}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Buttons container */}
+                    <div style={{ display: 'flex', flexDirection: 'column', width: '100%', gap: '1rem' }}>
+                        <button onClick={toggleCamera}
+                            style={{ width: '100%', padding: '0.85rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', backgroundColor: isCamOn ? 'rgba(239, 68, 68, 0.15)' : 'rgba(255,255,255,0.06)', color: isCamOn ? '#fca5a5' : 'white', fontWeight: 600, fontSize: '0.95rem', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                            {isCamOn ? (
+                                <><VideoOff size={16} /> Turn Off Camera</>
+                            ) : (
+                                <><Video size={16} /> Enable Camera</>
+                            )}
+                        </button>
+
+                        <button onClick={handleStartInterview} disabled={!isCamOn}
+                            style={{ width: '100%', padding: '0.9rem', borderRadius: '8px', border: 'none', backgroundColor: isCamOn ? 'var(--color-primary, #3b82f6)' : 'rgba(255,255,255,0.04)', color: isCamOn ? 'white' : '#64748b', fontWeight: 700, fontSize: '1rem', cursor: isCamOn ? 'pointer' : 'not-allowed', transition: 'all 0.2s', boxShadow: isCamOn ? '0 4px 12px rgba(59, 130, 246, 0.3)' : 'none' }}>
+                            {transcript.length > 0 ? 'Resume Interview ➔' : 'Start Interview ➔'}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', backgroundColor: '#0f172a', overflow: 'hidden' }}>
