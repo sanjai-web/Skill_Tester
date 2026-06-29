@@ -66,8 +66,8 @@ exports.runCode = async (req, res) => {
 
         const result = await callWandbox(payload);
 
-        // Wandbox returns status as a string number
-        const isError = result.status !== '0';
+        // Wandbox returns status as a JSON number or string
+        const isError = result.status !== undefined && String(result.status) !== '0';
 
         let output = '';
         if (result.compiler_error) {

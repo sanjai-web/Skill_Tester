@@ -66,8 +66,13 @@ exports.verifyPayment = async (req, res, next) => {
             return res.status(404).json({ status: 'error', message: 'Order not found.' });
         }
         
-        const trustedPlanId = orderDoc.data().plan_id;
-        if (orderDoc.data().user_id !== userId) {
+        const orderData = orderDoc.data();
+        if (orderData.status === 'paid') {
+            return res.status(400).json({ status: 'error', message: 'This payment order has already been processed.' });
+        }
+        
+        const trustedPlanId = orderData.plan_id;
+        if (orderData.user_id !== userId) {
              return res.status(403).json({ status: 'error', message: 'Unauthorized order.' });
         }
 

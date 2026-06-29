@@ -662,27 +662,39 @@ const ActiveInterview = () => {
         else window.speechSynthesis.addEventListener('voiceschanged', pickFemaleVoice, { once: true });
     }, []);
 
-    const speak = (text) => {
-        if (!('speechSynthesis' in window)) return;
+    const speak = (text, onEndCallback) => {
+        if (!('speechSynthesis' in window)) {
+            if (typeof onEndCallback === 'function') onEndCallback();
+            return;
+        }
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(text);
         if (selectedVoiceRef.current) utterance.voice = selectedVoiceRef.current;
         utterance.rate = 0.95; utterance.pitch = 1.1;
+
+        let fallbackTimer = null;
+        const resetSpeechState = () => {
+            if (fallbackTimer) { clearTimeout(fallbackTimer); fallbackTimer = null; }
+            setIsAiSpeaking(false);
+            isAiSpeakingRef.current = false;
+            if (typeof onEndCallback === 'function') onEndCallback();
+        };
 
         utterance.onstart = () => {
             setIsAiSpeaking(true);
             isAiSpeakingRef.current = true;
         };
 
-        utterance.onend = () => {
-            setIsAiSpeaking(false);
-            isAiSpeakingRef.current = false;
-        };
+        utterance.onend = resetSpeechState;
+        utterance.onerror = resetSpeechState;
 
-        utterance.onerror = () => {
-            setIsAiSpeaking(false);
-            isAiSpeakingRef.current = false;
-        };
+        // Chrome browser bug fallback: trigger state reset if speechSynthesis hangs and fails to fire onend
+        const wordCount = (text || '').split(/\s+/).length;
+        const estimatedMs = (wordCount * 350) + 4000;
+        fallbackTimer = setTimeout(() => {
+            console.warn('[SpeechSynthesis] onend did not fire within predicted window. Resetting AI speaking state.');
+            resetSpeechState();
+        }, estimatedMs);
 
         window.speechSynthesis.speak(utterance);
     };
@@ -704,12 +716,14 @@ const ActiveInterview = () => {
         if (selectedVoiceRef.current) utterance.voice = selectedVoiceRef.current;
         utterance.rate = 0.95; utterance.pitch = 1.1;
 
+        let fallbackTimer = null;
         utterance.onstart = () => {
             setIsAiSpeaking(true);
             isAiSpeakingRef.current = true;
         };
 
         const advanceSection = () => {
+            if (fallbackTimer) { clearTimeout(fallbackTimer); fallbackTimer = null; }
             setIsAiSpeaking(false);
             isAiSpeakingRef.current = false;
             const nextIdx = SECTIONS.findIndex(s => s.id === nextSection);
@@ -721,6 +735,14 @@ const ActiveInterview = () => {
 
         utterance.onend = advanceSection;
         utterance.onerror = advanceSection;
+
+        // Chrome browser bug fallback: trigger section advancement if speechSynthesis hangs and fails to fire onend
+        const wordCount = (text || '').split(/\s+/).length;
+        const estimatedMs = (wordCount * 350) + 4000;
+        fallbackTimer = setTimeout(() => {
+            console.warn('[SpeechSynthesis] onend did not fire within predicted window. Forcing section advancement.');
+            advanceSection();
+        }, estimatedMs);
 
         window.speechSynthesis.speak(utterance);
     };
@@ -841,15 +863,31 @@ const ActiveInterview = () => {
                 sectionQuestionCount, hasTechJD: !!hasTechJD, conversationHistory: updatedTranscript.slice(-8),
             });
             const { nextQuestion, advanceSection, nextSection, isCodingProblem, isAnswerRelevant } = response.data.data;
+            
+            const isClosingDone = sectionId === 'closing' && advanceSection;
+
+            const handleFinishRedirect = async () => {
+                if (isClosingDone) {
+                    // Automatically submit and end the interview!
+                    try { sessionStorage.removeItem('active_interview_state'); } catch (_) { }
+                    if (!interviewId) { navigate('/dashboard'); return; }
+                    setIsFinishing(true);
+                    try {
+                        const response = await api.post(`/interviews/${interviewId}/finish`);
+                        navigate(`/results/${response.data.data.interviewId}`);
+                    } catch (_) { navigate(`/results/${interviewId}`); }
+                }
+            };
+
             setTranscript(prev => [...prev, { from: 'ai', text: nextQuestion }]);
             setCurrentQuestion(nextQuestion);
-            speak(nextQuestion);
+            speak(nextQuestion, isClosingDone ? handleFinishRedirect : null);
             if (isCodingProblem) { setCodingProblem(nextQuestion); setShowEditor(true); return; }
-            if (advanceSection) {
+            if (advanceSection && !isClosingDone) {
                 const nextIdx = SECTIONS.findIndex(s => s.id === nextSection);
                 setCurrentSectionIndex(nextIdx !== -1 && nextIdx > currentSectionIndex ? nextIdx : prev => Math.min(prev + 1, SECTIONS.length - 1));
                 setSectionQuestionCount(1);
-            } else {
+            } else if (!isClosingDone) {
                 if (isAnswerRelevant !== false) {
                     setSectionQuestionCount(prev => prev + 1);
                 }

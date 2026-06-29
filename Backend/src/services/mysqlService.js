@@ -1,4 +1,5 @@
 const mysql = require('mysql2/promise');
+const { URL } = require('url');
 require('dotenv').config();
 
 const dbUrl = process.env.DATABASE_URL;
@@ -7,7 +8,25 @@ let pool;
 
 if (dbUrl) {
     console.log('🔌 Connecting to MySQL database using DATABASE_URL...');
-    pool = mysql.createPool(dbUrl);
+    try {
+        const parsedUrl = new URL(dbUrl);
+        const connectionLimit = parsedUrl.searchParams.get('connection_limit');
+        const port = parsedUrl.port ? parseInt(parsedUrl.port, 10) : 3306;
+
+        pool = mysql.createPool({
+            host: parsedUrl.hostname,
+            port: port,
+            user: decodeURIComponent(parsedUrl.username),
+            password: decodeURIComponent(parsedUrl.password),
+            database: parsedUrl.pathname ? parsedUrl.pathname.replace(/^\//, '') : undefined,
+            connectionLimit: connectionLimit ? parseInt(connectionLimit, 10) : 10,
+            waitForConnections: true,
+            queueLimit: 0
+        });
+    } catch (urlErr) {
+        console.error('⚠️ Failed to parse DATABASE_URL cleanly, falling back to direct string connection:', urlErr.message);
+        pool = mysql.createPool(dbUrl);
+    }
 } else {
     console.log('🔌 Connecting to MySQL database using individual config...');
     pool = mysql.createPool({

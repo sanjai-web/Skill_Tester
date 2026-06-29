@@ -46,10 +46,12 @@ exports.getMe = async (req, res) => {
 // POST /api/auth/google — checks if Google user exists in Firestore, creates if not
 exports.googleLogin = async (req, res) => {
     try {
-        const { uid, email, name } = req.body;
+        const uid = req.user.id;
+        const email = req.user.email;
+        const { name } = req.body;
 
-        if (!uid || !email || !name) {
-            return res.status(400).json({ status: 'error', message: 'Missing user data from Google Auth' });
+        if (!uid || !email) {
+            return res.status(400).json({ status: 'error', message: 'Missing authenticated user data' });
         }
 
         const userRef = db.collection('users').doc(uid);

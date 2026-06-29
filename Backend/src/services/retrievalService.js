@@ -52,7 +52,7 @@ function cosineSimilarity(vecA, vecB) {
 }
 
 /**
- * Retrieves relevant questions from the PostgreSQL database for DB-backed sections.
+ * Retrieves relevant questions from the MySQL database for DB-backed sections.
  * Ranks using: cosine similarity (0.60) + keyword overlap (0.25) + role boost (0.10) + difficulty boost (0.05)
  *
  * For RESUME_SECTIONS, returns an empty array immediately without hitting the DB.

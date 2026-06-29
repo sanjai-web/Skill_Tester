@@ -1,16 +1,24 @@
 const Groq = require('groq-sdk');
 
-// Parse keys from GROQ_API_KEYS if present, otherwise default to GROQ_API_KEY as a single-item array
 const keys = (() => {
+    const list = [];
     if (process.env.GROQ_API_KEYS) {
-        return process.env.GROQ_API_KEYS.split(',')
-            .map(k => k.trim())
-            .filter(Boolean);
+        process.env.GROQ_API_KEYS.split(',').map(k => k.trim()).forEach(k => {
+            if (k && !list.includes(k)) {
+                list.push(k);
+            }
+        });
     }
-    if (process.env.GROQ_API_KEY) {
-        return [process.env.GROQ_API_KEY.trim()];
+    for (let i = 1; i <= 10; i++) {
+        const k = process.env[`GROQ_API_KEY_${i}`];
+        if (k && !list.includes(k.trim())) {
+            list.push(k.trim());
+        }
     }
-    return [];
+    if (list.length === 0 && process.env.GROQ_API_KEY) {
+        list.push(process.env.GROQ_API_KEY.trim());
+    }
+    return list;
 })();
 
 let currentIndex = 0;

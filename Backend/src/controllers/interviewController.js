@@ -252,6 +252,13 @@ exports.evaluateAnswer = async (req, res, next) => {
             return res.status(400).json({ status: 'error', message: 'interviewId, currentQuestion, and answer are required.' });
         }
 
+        // Check ownership of the interview session before proceeding (IDOR Protection)
+        const interviewRef = db.collection('interviews').doc(interviewId);
+        const interviewDoc = await interviewRef.get();
+        if (!interviewDoc.exists || interviewDoc.data().user_id !== req.user.id) {
+            return res.status(403).json({ status: 'error', message: 'Unauthorized: Access to this interview session is denied.' });
+        }
+
         const sectionId = section || 'self_intro';
         const sectionDef = aiService.SECTIONS.find(s => s.id === sectionId);
         const maxQ = sectionDef?.maxQ || 3;
@@ -312,6 +319,13 @@ exports.evaluateCodingSubmission = async (req, res, next) => {
     try {
         const { interviewId, codingProblem, language, code, output, role, company, section, conversationHistory } = req.body;
         if (!interviewId || !code) return res.status(400).json({ status: 'error', message: 'interviewId and code are required.' });
+
+        // Check ownership of the interview session before proceeding (IDOR Protection)
+        const interviewRef = db.collection('interviews').doc(interviewId);
+        const interviewDoc = await interviewRef.get();
+        if (!interviewDoc.exists || interviewDoc.data().user_id !== req.user.id) {
+            return res.status(403).json({ status: 'error', message: 'Unauthorized: Access to this coding session is denied.' });
+        }
 
         const evaluation = await aiService.evaluateCodingSubmission({
             role: role || 'Software Engineer',
@@ -390,10 +404,19 @@ exports.finishInterview = async (req, res, next) => {
 
         questions.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
 
-        // The expected total questions if the user completes all sections
+        // Dynamically compute expectedTotalQuestions to avoid penalizing candidates who legitimately skip sections (e.g. projects/experience)
+        const activeSectionKeys = new Set(questions.map(q => q.section));
+        const reachedClosing = activeSectionKeys.has('closing');
+
         const expectedTotalQuestions = aiService.SECTIONS
             .filter(s => s.id !== 'closing' && s.id !== 'self_intro')
-            .reduce((sum, s) => sum + s.maxQ, 1); // +1 for self_intro
+            .reduce((sum, s) => {
+                // If they completed the interview (reached closing section) but a section was completely skipped, omit it from scoring denominator
+                if (reachedClosing && !activeSectionKeys.has(s.id)) {
+                    return sum;
+                }
+                return sum + s.maxQ;
+            }, 1); // +1 for self_intro
 
         const denominator = Math.max(answeredCount, expectedTotalQuestions);
         const finalScore = denominator > 0 ? Math.round((totalScore / denominator) * 10) : 0;

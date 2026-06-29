@@ -10,6 +10,6 @@ router.post('/register', authController.register);
 router.get('/me', authMiddleware, authController.getMe);
 
 // @route   POST /api/auth/google — syncs Google user with Firestore
-router.post('/google', authController.googleLogin);
+router.post('/google', authMiddleware, authController.googleLogin);
 
 module.exports = router;
