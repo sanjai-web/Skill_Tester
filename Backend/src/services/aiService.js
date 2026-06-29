@@ -15,6 +15,8 @@
  *   - Adaptive difficulty via candidate memory
  */
 
+
+const { getGroqClient } = require('../config/groq');
 require('dotenv').config();
 const ragService = require('./ragService');
 const retrievalService = require('./retrievalService');
@@ -36,7 +38,6 @@ async function getSkillsForInterview(interviewId) {
     return [];
 }
 
-const groq = require('./groqClient');
 const AI_MODEL = process.env.AI_MODEL || 'llama-3.3-70b-versatile';
 
 // ─────────────────────────────────────────────
@@ -75,6 +76,7 @@ function isTechJD(jobDescription) {
 // GROQ WRAPPER
 // ─────────────────────────────────────────────
 async function askGroq(prompt, maxTokens = 700) {
+    const groq = getGroqClient();
     const result = await groq.chat.completions.create({
         model: AI_MODEL,
         messages: [{ role: 'user', content: prompt }],

@@ -6,6 +6,9 @@ const helmet = require('helmet');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Trust proxy setup for reverse proxies (Render, Heroku, Cloudflare, Nginx, etc.)
+app.set('trust proxy', 1);
+
 // Middleware
 app.use(helmet({
     crossOriginOpenerPolicy: false // Required for Google Login popup to work

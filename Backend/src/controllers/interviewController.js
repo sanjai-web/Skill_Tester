@@ -2,12 +2,17 @@ const { db } = require('../config/firebase');
 const aiService = require('../services/aiService');
 const pdfService = require('../services/pdfService');
 const admin = require('firebase-admin');
-const groq = require('../services/groqClient');
+
+const { getGroqClient } = require('../config/groq');
+
 
 // ─── Evaluation Report Generator ─────────────────────────────────────────────
 // Computes section scores locally (deterministic), then asks Groq only for
 // natural-language narrative (no number hallucination risk).
 async function generateEvaluationReport({ role, company, questions, finalScore }) {
+
+    const groq = getGroqClient();
+
 
     const SECTION_LABELS = {
         self_intro: 'Self Introduction', projects: 'Projects', experience: 'Experience',

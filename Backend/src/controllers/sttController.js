@@ -1,5 +1,7 @@
-const groq = require('../services/groqClient');
+
 const { toFile } = require('groq-sdk');
+const { getGroqClient } = require('../config/groq');
+
 
 /**
  * POST /api/stt/transcribe
@@ -14,6 +16,7 @@ const { toFile } = require('groq-sdk');
  */
 exports.transcribeAudio = async (req, res, next) => {
     try {
+        const groq = getGroqClient();
         if (!req.file || !req.file.buffer || req.file.buffer.length === 0) {
             return res.status(400).json({ status: 'error', message: 'No audio data received.' });
         }
